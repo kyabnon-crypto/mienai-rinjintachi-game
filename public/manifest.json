@@ -1,0 +1,10 @@
+{
+  "name": "涙蔵のオルゴール 〜ナミダビン〜",
+  "short_name": "涙蔵のオルゴール",
+  "description": "見えない隣人たち — 常世町の地下『涙蔵』で遊ぶ3D WebGL箱庭オルゴールゲーム",
+  "start_url": "./",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#060b1c",
+  "theme_color": "#070b1c"
+}

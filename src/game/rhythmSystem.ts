@@ -105,6 +105,8 @@ export class RhythmSystem {
   private particleGeo = new THREE.OctahedronGeometry(0.045);
 
   private isPointerDown = false;
+  private viewW = window.innerWidth;
+  private viewH = window.innerHeight;
 
   constructor(
     vault: VaultScene,
@@ -127,10 +129,49 @@ export class RhythmSystem {
   }
 
   public resizeFx(w: number, h: number): void {
+    this.viewW = Math.max(1, w);
+    this.viewH = Math.max(1, h);
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
-    this.fxCanvas.width = Math.max(1, Math.floor(w * dpr));
-    this.fxCanvas.height = Math.max(1, Math.floor(h * dpr));
+    this.fxCanvas.width = Math.max(1, Math.floor(this.viewW * dpr));
+    this.fxCanvas.height = Math.max(1, Math.floor(this.viewH * dpr));
     this.fxCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+
+  public resetSession(): void {
+    for (const c of this.crystals) {
+      this.removeCrystalMesh(c);
+    }
+    this.crystals = [];
+
+    for (const o of this.flyingOrbs) {
+      this.crystalGroup.remove(o.mesh);
+      (o.mesh.material as THREE.Material).dispose();
+    }
+    this.flyingOrbs = [];
+
+    for (const p of this.particles) {
+      this.crystalGroup.remove(p.mesh);
+      (p.mesh.material as THREE.Material).dispose();
+    }
+    this.particles = [];
+
+    this.ripples = [];
+    this.trail = [];
+    this.isPointerDown = false;
+    this.combo = 0;
+    this.isFever = false;
+    this.feverRemainingSec = 0;
+    this.isPolishing = false;
+    this.polishStep = 0;
+    this.polishPerfectCount = 0;
+    this.lastSpawnStep = -1;
+    this.lastMeasureIndex = -1;
+    this.vault.setPolishFocus(false);
+    this.fxCtx.clearRect(0, 0, this.viewW, this.viewH);
+
+    this.cb.onComboChange(0, 1.0);
+    this.cb.onPolishStateChange(false, 0, this.polishTotalSteps);
+    this.cb.onFeverChange(false, this.feverGauge, 0);
   }
 
   public getComboMultiplier(): number {
@@ -175,7 +216,7 @@ export class RhythmSystem {
     // 3D sparkle burst on pedestal
     const pedPos = this.vault.getPedestalWorldPosition();
     this.spawnBurst(pedPos, perfect ? 0xfff0a8 : 0x7fc8ff, perfect ? 18 : 10);
-    this.spawnRipple(window.innerWidth * 0.5, window.innerHeight * 0.48, perfect ? '#fff0a6' : '#7fc8ff', 110);
+    this.spawnRipple(this.viewW * 0.5, this.viewH * 0.48, perfect ? '#fff0a6' : '#7fc8ff', 110);
 
     if (this.polishStep >= this.polishTotalSteps) {
       this.completePolish();
@@ -204,7 +245,7 @@ export class RhythmSystem {
     const pedPos = this.vault.getPedestalWorldPosition();
     this.spawnBurst(pedPos, 0x8fe6ff, 34);
     this.spawnBurst(pedPos.clone().add(new THREE.Vector3(0, 0.25, 0)), 0xffe49e, 22);
-    this.spawnRipple(window.innerWidth * 0.5, window.innerHeight * 0.45, '#a8e4ff', 220);
+    this.spawnRipple(this.viewW * 0.5, this.viewH * 0.45, '#a8e4ff', 220);
 
     this.cb.onPolishStateChange(false, 0, this.polishTotalSteps);
     this.cb.onGemAscended(earned, this.gsm.state.totalGemsCrafted);
@@ -541,8 +582,8 @@ export class RhythmSystem {
   private projectToScreen(worldPos: THREE.Vector3): { x: number; y: number; visible: boolean } {
     const v = worldPos.clone().project(this.vault.camera);
     return {
-      x: (v.x * 0.5 + 0.5) * window.innerWidth,
-      y: (-v.y * 0.5 + 0.5) * window.innerHeight,
+      x: (v.x * 0.5 + 0.5) * this.viewW,
+      y: (-v.y * 0.5 + 0.5) * this.viewH,
       visible: v.z < 1,
     };
   }
@@ -685,7 +726,7 @@ export class RhythmSystem {
 
   private render2DFx(dt: number): void {
     const ctx = this.fxCtx;
-    ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+    ctx.clearRect(0, 0, this.viewW, this.viewH);
 
     // Expanding judgment ripples
     const nextRipples: ScreenRipple[] = [];

@@ -22,8 +22,7 @@
 }
 
 html,
-body,
-#app {
+body {
   width: 100%;
   height: 100%;
   height: 100dvh;
@@ -34,10 +33,31 @@ body,
   font-family: var(--font-sans);
 }
 
+#app {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  height: 100dvh;
+  overflow: hidden;
+  background: var(--bg-deep);
+}
+
+/* Automatic virtual landscape fallback (e.g. iOS Safari held vertically) */
+#app.force-landscape {
+  top: 0;
+  left: var(--vw, 100vw);
+  width: var(--vh, 100dvh);
+  height: var(--vw, 100vw);
+  transform-origin: top left;
+  transform: rotate(90deg);
+}
+
 #game-canvas,
 #fx-canvas,
 #floating-layer {
-  position: fixed;
+  position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
@@ -60,7 +80,7 @@ body,
 
 /* ===== Title Screen ===== */
 .overlay-screen {
-  position: fixed;
+  position: absolute;
   inset: 0;
   display: flex;
   align-items: center;
@@ -173,38 +193,9 @@ body,
   color: var(--accent-gold);
 }
 
-/* ===== Portrait Warning ===== */
-.portrait-banner {
-  position: fixed;
-  top: 10px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 50;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 8px 14px;
-  border-radius: 999px;
-  background: rgba(12, 22, 46, 0.92);
-  border: 1px solid rgba(236, 208, 132, 0.45);
-  font-size: 0.76rem;
-  color: var(--accent-gold);
-  white-space: nowrap;
-}
-
-.portrait-banner button {
-  background: rgba(255, 255, 255, 0.12);
-  border: none;
-  color: #fff;
-  padding: 3px 10px;
-  border-radius: 999px;
-  font-size: 0.72rem;
-  cursor: pointer;
-}
-
 /* ===== Main HUD ===== */
 .hud {
-  position: fixed;
+  position: absolute;
   inset: 0;
   pointer-events: none;
   display: flex;
@@ -667,7 +658,7 @@ body,
 
 /* ===== Polish Overlay ===== */
 .polish-prompt {
-  position: fixed;
+  position: absolute;
   inset: 0;
   pointer-events: auto;
   display: flex;
@@ -730,11 +721,11 @@ body,
 
 /* ===== Side Craft Drawer ===== */
 .side-drawer {
-  position: fixed;
+  position: absolute;
   top: 10px;
   right: 10px;
   bottom: 10px;
-  width: min(370px, 88vw);
+  width: min(370px, 86%);
   pointer-events: auto;
   display: flex;
   flex-direction: column;
@@ -891,23 +882,23 @@ body,
   font-weight: 700;
 }
 
-/* ===== Modals (Story & Settings) ===== */
+/* ===== Modals (Pause, Story & Settings) ===== */
 .modal-backdrop {
-  position: fixed;
+  position: absolute;
   inset: 0;
   pointer-events: auto;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 16px;
-  background: rgba(4, 8, 20, 0.72);
+  background: rgba(4, 8, 20, 0.74);
   backdrop-filter: blur(6px);
   z-index: 35;
 }
 
 .modal-card {
-  width: min(640px, 94vw);
-  max-height: 86dvh;
+  width: min(640px, 92%);
+  max-height: 88%;
   display: flex;
   flex-direction: column;
   border-radius: 20px;
@@ -918,7 +909,114 @@ body,
 }
 
 .modal-compact {
-  width: min(440px, 92vw);
+  width: min(440px, 90%);
+}
+
+.modal-pause {
+  width: min(410px, 88%);
+}
+
+.pause-btn {
+  border-color: rgba(180, 224, 255, 0.4);
+  min-width: 36px;
+}
+
+.pause-body {
+  padding: 20px 22px 22px;
+  text-align: center;
+  overflow-y: auto;
+}
+
+.pause-eyebrow {
+  font-size: 0.7rem;
+  letter-spacing: 0.26em;
+  color: var(--accent-tear);
+}
+
+.pause-body h2 {
+  font-family: var(--font-serif);
+  font-size: 1.4rem;
+  letter-spacing: 0.14em;
+  color: #f6fbff;
+  margin-top: 4px;
+}
+
+.pause-sub {
+  font-size: 0.74rem;
+  color: var(--ink-muted);
+  margin-top: 4px;
+}
+
+.pause-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin: 14px 0 18px;
+}
+
+.pause-stat {
+  padding: 8px 6px;
+  border-radius: 12px;
+  background: rgba(16, 30, 62, 0.7);
+  border: 1px solid rgba(168, 224, 255, 0.16);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.pause-stat span {
+  font-size: 0.64rem;
+  color: var(--ink-muted);
+}
+
+.pause-stat strong {
+  font-size: 0.98rem;
+  color: #f0f8ff;
+  font-variant-numeric: tabular-nums;
+}
+
+.pause-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.pause-action-primary {
+  width: 100%;
+  justify-content: center;
+  padding: 11px 20px;
+  font-size: 0.92rem;
+}
+
+.btn-secondary,
+.btn-lobby {
+  width: 100%;
+  padding: 10px 16px;
+  border-radius: 999px;
+  font-family: var(--font-sans);
+  font-size: 0.84rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  transition: filter 0.16s, transform 0.14s;
+}
+
+.btn-secondary {
+  border: 1px solid rgba(168, 224, 255, 0.34);
+  background: rgba(20, 40, 78, 0.72);
+  color: #eaf5ff;
+}
+
+.btn-lobby {
+  border: 1px solid rgba(255, 160, 182, 0.45);
+  background: rgba(98, 26, 48, 0.55);
+  color: #ffdce5;
+}
+
+.btn-secondary:hover,
+.btn-lobby:hover {
+  filter: brightness(1.15);
+  transform: translateY(-1px);
 }
 
 .story-list {
@@ -1076,7 +1174,7 @@ body,
 }
 
 .toast-container {
-  position: fixed;
+  position: absolute;
   left: 50%;
   bottom: 92px;
   transform: translateX(-50%);
@@ -1133,7 +1231,7 @@ body,
   }
 }
 
-/* ===== Compact Mobile Landscape Tuning (e.g. 844x390) ===== */
+/* ===== Compact Mobile Landscape Tuning (native landscape OR virtual force-landscape) ===== */
 @media (max-height: 500px) {
   .hud {
     padding: 6px 10px;
@@ -1179,4 +1277,72 @@ body,
     margin: 8px auto 12px;
     font-size: 0.78rem;
   }
+  .pause-body {
+    padding: 12px 16px 14px;
+  }
+  .pause-stats {
+    margin: 8px 0 12px;
+  }
+  .pause-actions {
+    gap: 6px;
+  }
+  .pause-action-primary,
+  .btn-secondary,
+  .btn-lobby {
+    padding: 8px 14px;
+    font-size: 0.78rem;
+  }
+}
+
+#app.force-landscape .hud {
+  padding: 6px 12px;
+}
+#app.force-landscape .vault-badge,
+#app.force-landscape .resource-pill,
+#app.force-landscape .tally-pill {
+  padding: 4px 8px;
+  border-radius: 10px;
+}
+#app.force-landscape .res-meta strong {
+  font-size: 0.84rem;
+}
+#app.force-landscape .track-btn,
+#app.force-landscape .icon-btn {
+  padding: 4px 8px;
+  font-size: 0.7rem;
+}
+#app.force-landscape .hud-center-top {
+  top: 46px;
+}
+#app.force-landscape .bottle-panel {
+  padding: 5px 9px;
+}
+#app.force-landscape .bottle-glass {
+  width: 20px;
+  height: 34px;
+}
+#app.force-landscape .quick-hint-panel {
+  display: none;
+}
+#app.force-landscape .hud-bottom {
+  grid-template-columns: auto 1fr;
+}
+#app.force-landscape .beat-center-panel {
+  justify-self: end;
+  min-width: 240px;
+}
+#app.force-landscape .pause-body {
+  padding: 12px 16px 14px;
+}
+#app.force-landscape .pause-stats {
+  margin: 8px 0 12px;
+}
+#app.force-landscape .pause-actions {
+  gap: 6px;
+}
+#app.force-landscape .pause-action-primary,
+#app.force-landscape .btn-secondary,
+#app.force-landscape .btn-lobby {
+  padding: 8px 14px;
+  font-size: 0.78rem;
 }

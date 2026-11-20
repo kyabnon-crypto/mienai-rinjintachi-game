@@ -7,11 +7,14 @@ import { GameStateManager } from './game/state';
 import { TrackId, UpgradeId } from './game/types';
 import { UIController } from './game/uiController';
 import { VaultScene } from './game/vaultScene';
+import { LandscapeViewport } from './game/viewport';
 
 async function bootstrap(): Promise<void> {
+  const appEl = document.getElementById('app') as HTMLElement;
   const gameCanvas = document.getElementById('game-canvas') as HTMLCanvasElement;
   const fxCanvas = document.getElementById('fx-canvas') as HTMLCanvasElement;
 
+  const viewport = new LandscapeViewport(appEl);
   const gsm = new GameStateManager();
   const audio = new AudioEngine();
   audio.bgmVolume = gsm.state.settings.bgmVolume;
@@ -24,24 +27,69 @@ async function bootstrap(): Promise<void> {
   const actor = new NamidabinActor(vault.vaultGroup, vault.glowTex);
 
   let started = false;
+  let paused = false;
   let lastBeatFloat = 0;
   let lastPolishStep = 0;
   let lastPolishTotal = 4;
   let autoSaveTimer = 0;
+  let shownOfflineToast = false;
 
   let prevUnlockedStories = gsm.getUnlockedEpisodesCount();
+
+  const applyViewportResize = () => {
+    viewport.sync();
+    const { width, height } = viewport.getSize();
+    vault.resize(width, height);
+    rhythm.resizeFx(width, height);
+  };
+
+  const pauseGame = () => {
+    if (!started || paused) return;
+    paused = true;
+    rhythm.handlePointerUp();
+    audio.pause();
+    gsm.save();
+    ui.showPauseModal(true, rhythm.combo);
+  };
+
+  const resumeGame = () => {
+    if (!started || !paused) return;
+    paused = false;
+    ui.showPauseModal(false);
+    audio.resume();
+    // Re-ensure landscape in case user exited fullscreen while paused
+    void viewport.enterLandscape().then(applyViewportResize);
+  };
+
+  const returnToLobby = () => {
+    if (!started) return;
+    started = false;
+    paused = false;
+    gsm.save();
+    audio.stopAll();
+    rhythm.resetSession();
+    ui.returnToLobby();
+    void viewport.exitLandscape().then(applyViewportResize);
+  };
 
   const ui = new UIController(gsm, {
     onStart: () => {
       if (started) return;
       started = true;
+      paused = false;
+
+      // Immediately enter auto-landscape (native lock on Android, CSS rotation fallback on iOS)
+      void viewport.enterLandscape().then(applyViewportResize);
+      applyViewportResize();
+
       ui.enterGame();
       audio.init(gsm.state.selectedTrack);
       const tickInfo = audio.update(0);
       rhythm.resetBeatCursors(tickInfo.beatFloat);
       ui.updateHUD(audio.currentTrackId);
 
-      if (gsm.offlineEarnedTears > 0) {
+      if (gsm.offlineEarnedTears > 0 && !shownOfflineToast) {
+        shownOfflineToast = true;
         ui.showToast(
           '荷車が涙瓶を運んでくれました',
           `不在中に +${gsm.offlineEarnedTears.toLocaleString('ja-JP')} 涙の結晶を採集`,
@@ -52,7 +100,12 @@ async function bootstrap(): Promise<void> {
       }
     },
 
+    onPause: () => pauseGame(),
+    onResume: () => resumeGame(),
+    onReturnToLobby: () => returnToLobby(),
+
     onSelectTrack: async (trackId: TrackId) => {
+      if (paused) return;
       if (rhythm.isFever) {
         ui.showToast('CRYSTAL RUSH 中です', 'フィーバー終了後に楽曲を切り替えられます', 'gold');
         return;
@@ -81,7 +134,6 @@ async function bootstrap(): Promise<void> {
       vault.syncUpgrades(gsm.state);
       ui.updateHUD(audio.currentTrackId);
 
-      // Check for newly unlocked tracks or story chapters
       if (id === 'musicbox' && gsm.state.upgrades.musicbox === 1) {
         ui.showToast('✨ 通常版アレンジ解放！', '右上の楽曲ボタンからいつでも切替できます', 'gold');
       } else if (id === 'musicbox' && gsm.state.upgrades.musicbox === 3) {
@@ -92,12 +144,12 @@ async function bootstrap(): Promise<void> {
     },
 
     onClickPolish: () => {
-      if (!started) return;
+      if (!started || paused) return;
       rhythm.startPolish(lastBeatFloat);
     },
 
     onClickFever: () => {
-      if (!started) return;
+      if (!started || paused) return;
       void rhythm.activateFever(lastBeatFloat);
       ui.updateHUD('remix');
       ui.showToast('🔥 CRYSTAL RUSH 発動！', 'Digital Math Punk Remix — 宝石＆結晶 2倍！', 'gold');
@@ -177,6 +229,8 @@ async function bootstrap(): Promise<void> {
     },
   });
 
+  applyViewportResize();
+
   // Load real Namidabin .glb model asynchronously while scene is already alive
   actor
     .load('./assets/models/namidabin.glb')
@@ -186,22 +240,27 @@ async function bootstrap(): Promise<void> {
       ui.setModelReady(true, '涙蔵の準備が整いました（軽量モード）');
     });
 
-  // Pointer & touch interaction on the 3D canvas
+  // Pointer & touch interaction on the 3D canvas (mapped through virtual landscape viewport)
   const onPointerDown = (e: PointerEvent) => {
-    if (!started) return;
+    if (!started || paused) return;
     audio.unlockOnGesture();
-    const nx = (e.clientX / window.innerWidth) * 2 - 1;
-    const ny = -((e.clientY / window.innerHeight) * 2 - 1);
+    const { width, height } = viewport.getSize();
+    const pt = viewport.clientToVirtual(e.clientX, e.clientY);
+    const nx = (pt.x / width) * 2 - 1;
+    const ny = -((pt.y / height) * 2 - 1);
     vault.setPointerNdc(nx, ny);
-    rhythm.handlePointerDown(e.clientX, e.clientY, lastBeatFloat);
+    rhythm.handlePointerDown(pt.x, pt.y, lastBeatFloat);
   };
 
   const onPointerMove = (e: PointerEvent) => {
-    const nx = (e.clientX / window.innerWidth) * 2 - 1;
-    const ny = -((e.clientY / window.innerHeight) * 2 - 1);
+    if (paused) return;
+    const { width, height } = viewport.getSize();
+    const pt = viewport.clientToVirtual(e.clientX, e.clientY);
+    const nx = (pt.x / width) * 2 - 1;
+    const ny = -((pt.y / height) * 2 - 1);
     vault.setPointerNdc(nx, ny);
     if (started) {
-      rhythm.handlePointerMove(e.clientX, e.clientY, lastBeatFloat);
+      rhythm.handlePointerMove(pt.x, pt.y, lastBeatFloat);
     }
   };
 
@@ -217,14 +276,21 @@ async function bootstrap(): Promise<void> {
   // Also allow tapping anywhere on the polish overlay itself during polishing
   document.getElementById('polish-prompt')!.addEventListener('pointerdown', (e) => {
     e.stopPropagation();
-    if (started && rhythm.isPolishing) {
+    if (started && !paused && rhythm.isPolishing) {
       rhythm.tapPolish(lastBeatFloat);
     }
   });
 
-  // Keyboard shortcuts for crisp PC rhythm play (Space / Z / X / J / K / F)
+  // Keyboard shortcuts (Space/Z/X/J/K = rhythm snap, F = fever, Esc/P = pause toggle)
   window.addEventListener('keydown', (e) => {
     if (!started || e.repeat) return;
+    if (e.code === 'Escape' || e.code === 'KeyP') {
+      e.preventDefault();
+      if (paused) resumeGame();
+      else pauseGame();
+      return;
+    }
+    if (paused) return;
     if (['Space', 'KeyZ', 'KeyX', 'KeyJ', 'KeyK'].includes(e.code)) {
       e.preventDefault();
       rhythm.handleKeySnap(lastBeatFloat);
@@ -234,10 +300,20 @@ async function bootstrap(): Promise<void> {
     }
   });
 
-  // Resize handler
-  window.addEventListener('resize', () => {
-    vault.resize(window.innerWidth, window.innerHeight);
-    rhythm.resizeFx(window.innerWidth, window.innerHeight);
+  // Auto-pause when switching apps or locking smartphone
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden && started && !paused) {
+      pauseGame();
+    }
+  });
+
+  // Resize & orientation handlers
+  window.addEventListener('resize', applyViewportResize);
+  window.addEventListener('orientationchange', () => {
+    setTimeout(applyViewportResize, 120);
+  });
+  document.addEventListener('fullscreenchange', () => {
+    setTimeout(applyViewportResize, 80);
   });
 
   // Main 60fps animation loop
@@ -248,9 +324,15 @@ async function bootstrap(): Promise<void> {
     requestAnimationFrame(loop);
     const dt = Math.min(0.05, (now - prevTime) / 1000);
     prevTime = now;
-    elapsed += dt;
 
-    const beatInfo = audio.update(dt);
+    if (paused) {
+      // Keep rendering the static paused 3D frame cleanly without advancing time
+      vault.renderer.render(vault.scene, vault.camera);
+      return;
+    }
+
+    elapsed += dt;
+    const beatInfo = audio.update(dt, false);
     lastBeatFloat = beatInfo.beatFloat;
 
     if (started) {

@@ -43,6 +43,7 @@ export class AudioEngine {
   public init(initialTrack: TrackId): void {
     if (this.ctx) {
       this.unlockOnGesture();
+      void this.switchTrack(initialTrack, 0, 0.6);
       return;
     }
 
@@ -168,7 +169,46 @@ export class AudioEngine {
     }
   }
 
-  public update(dt: number): {
+  public pause(): void {
+    const ch = this.channels[this.currentTrackId];
+    if (ch && !ch.el.paused) {
+      ch.el.pause();
+    }
+    if (this.ctx && this.ctx.state === 'running') {
+      void this.ctx.suspend();
+    }
+  }
+
+  public resume(): void {
+    if (this.ctx && this.ctx.state === 'suspended') {
+      void this.ctx.resume();
+    }
+    const ch = this.channels[this.currentTrackId];
+    if (ch && ch.el.paused && this.isReady) {
+      void ch.el.play().catch(() => {});
+    }
+  }
+
+  public stopAll(): void {
+    const now = this.ctx?.currentTime ?? 0;
+    (['dreamy', 'normal', 'remix'] as TrackId[]).forEach((id) => {
+      const ch = this.channels[id];
+      if (!ch) return;
+      if (this.ctx) {
+        ch.gain.gain.cancelScheduledValues(now);
+        ch.gain.gain.setValueAtTime(0, now);
+      }
+      ch.el.pause();
+      try {
+        ch.el.currentTime = 0;
+      } catch {
+        // Ignore
+      }
+    });
+    this.fallbackTime = 0;
+  }
+
+  public update(dt: number, paused = false): {
     songTimeSec: number;
     bpm: number;
     beatFloat: number;
@@ -177,7 +217,9 @@ export class AudioEngine {
     energy: number;
     bass: number;
   } {
-    this.fallbackTime += dt;
+    if (!paused) {
+      this.fallbackTime += dt;
+    }
     const track = TRACKS[this.currentTrackId];
     const ch = this.channels[this.currentTrackId];
     const rawTime = ch && !ch.el.paused && ch.el.currentTime > 0 ? ch.el.currentTime : this.fallbackTime;

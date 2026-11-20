@@ -10,6 +10,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="theme-color" content="#070b1c" />
+    <link rel="manifest" href="./manifest.json" />
     <meta
       name="description"
       content="見えない隣人たち — 常世町の地下『涙蔵』で、音楽のリズムに合わせて涙の結晶を集め、宝石へと磨き上げる3D WebGL箱庭オルゴールゲーム"
@@ -30,7 +31,7 @@
       <canvas id="fx-canvas" aria-hidden="true"></canvas>
       <div id="floating-layer" aria-hidden="true"></div>
 
-      <!-- Title overlay -->
+      <!-- Title / Lobby overlay -->
       <section id="title-screen" class="overlay-screen">
         <div class="title-card">
           <p class="title-eyebrow">見えない隣人たち — 第十二話 プレイアブル試作</p>
@@ -45,17 +46,11 @@
             涙蔵の扉をあける
           </button>
           <p class="title-hint">
-            横画面推奨 ・ タップ / スワイプ / Spaceキー対応 ・ 音声ONでお楽しみください
+            起動時に自動で横画面表示 ・ タップ / スワイプ / Spaceキー対応 ・ 音声ON推奨
           </p>
           <div id="loading-status" class="loading-status">3Dモデルと楽曲を準備しています…</div>
         </div>
       </section>
-
-      <!-- Portrait warning (dismissible) -->
-      <div id="portrait-banner" class="portrait-banner hidden" role="status">
-        <span>スマホを横向きにすると、涙蔵がもっとも美しく広がります</span>
-        <button id="btn-dismiss-portrait" type="button">閉じる</button>
-      </div>
 
       <!-- Main HUD (hidden until start) -->
       <div id="hud" class="hud hidden">
@@ -106,6 +101,9 @@
               ✨ 蔵を育てる <span id="craft-badge" class="notif-dot hidden"></span>
             </button>
             <button id="btn-settings" class="icon-btn" type="button" title="設定">⚙</button>
+            <button id="btn-pause" class="icon-btn pause-btn" type="button" title="一時停止（Esc / P）" aria-label="一時停止">
+              ⏸
+            </button>
           </div>
         </header>
 
@@ -179,6 +177,42 @@
           </div>
           <div id="craft-list" class="craft-list"></div>
         </aside>
+
+        <!-- Pause Modal -->
+        <div id="pause-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="pause-modal-title">
+          <div class="modal-card modal-pause">
+            <div class="pause-body">
+              <p class="pause-eyebrow">PAUSED</p>
+              <h2 id="pause-modal-title">ひとやすみ</h2>
+              <p class="pause-sub">進行状況は自動で保存されています</p>
+              <div class="pause-stats">
+                <div class="pause-stat">
+                  <span>現在のコンボ</span>
+                  <strong id="pause-stat-combo">0</strong>
+                </div>
+                <div class="pause-stat">
+                  <span>涙の結晶</span>
+                  <strong id="pause-stat-tears">0</strong>
+                </div>
+                <div class="pause-stat">
+                  <span>涙の宝石</span>
+                  <strong id="pause-stat-gems">0</strong>
+                </div>
+              </div>
+              <div class="pause-actions">
+                <button id="btn-resume" class="btn-primary pause-action-primary" type="button">
+                  ▶ ゲームを再開する
+                </button>
+                <button id="btn-pause-settings" class="btn-secondary" type="button">
+                  ⚙ 音量・タイミング設定
+                </button>
+                <button id="btn-return-lobby" class="btn-lobby" type="button">
+                  🏠 終了してロビーへ戻る
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
 
         <!-- Story / Memory Modal -->
         <div id="story-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="story-modal-title">

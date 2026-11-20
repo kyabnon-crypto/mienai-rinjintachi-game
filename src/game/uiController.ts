@@ -20,6 +20,9 @@ function formatTallyMarks(count: number): string {
 
 export interface UIActions {
   onStart: () => void;
+  onPause: () => void;
+  onResume: () => void;
+  onReturnToLobby: () => void;
   onSelectTrack: (trackId: TrackId) => void;
   onBuyUpgrade: (id: UpgradeId) => void;
   onClickPolish: () => void;
@@ -39,7 +42,6 @@ export class UIController {
   private btnStart = document.getElementById('btn-start') as HTMLButtonElement;
   private hud = document.getElementById('hud')!;
   private floatingLayer = document.getElementById('floating-layer')!;
-  private portraitBanner = document.getElementById('portrait-banner')!;
 
   private elVaultRank = document.getElementById('hud-vault-rank')!;
   private elTears = document.getElementById('hud-tears')!;
@@ -68,6 +70,11 @@ export class UIController {
   private craftList = document.getElementById('craft-list')!;
   private craftBadge = document.getElementById('craft-badge')!;
 
+  private pauseModal = document.getElementById('pause-modal')!;
+  private pauseStatCombo = document.getElementById('pause-stat-combo')!;
+  private pauseStatTears = document.getElementById('pause-stat-tears')!;
+  private pauseStatGems = document.getElementById('pause-stat-gems')!;
+
   private storyModal = document.getElementById('story-modal')!;
   private storyList = document.getElementById('story-list')!;
   private storyBadge = document.getElementById('story-badge')!;
@@ -78,22 +85,23 @@ export class UIController {
   private polishStepText = document.getElementById('polish-step-text')!;
   private toastContainer = document.getElementById('toast-container')!;
 
-  private portraitDismissed = false;
-
   constructor(gsm: GameStateManager, actions: UIActions) {
     this.gsm = gsm;
     this.actions = actions;
     this.bindEvents();
     this.syncSettingsInputs();
-    this.checkOrientation();
   }
 
   private bindEvents(): void {
     this.btnStart.addEventListener('click', () => this.actions.onStart());
 
-    document.getElementById('btn-dismiss-portrait')!.addEventListener('click', () => {
-      this.portraitDismissed = true;
-      this.portraitBanner.classList.add('hidden');
+    document.getElementById('btn-pause')!.addEventListener('click', () => this.actions.onPause());
+    document.getElementById('btn-resume')!.addEventListener('click', () => this.actions.onResume());
+    document.getElementById('btn-pause-settings')!.addEventListener('click', () => {
+      this.settingsModal.classList.remove('hidden');
+    });
+    document.getElementById('btn-return-lobby')!.addEventListener('click', () => {
+      this.actions.onReturnToLobby();
     });
 
     this.trackBtns.forEach((btn) => {
@@ -131,7 +139,7 @@ export class UIController {
       this.settingsModal.classList.add('hidden');
     });
 
-    // Backdrop click closes modals
+    // Backdrop click closes secondary modals (not pause modal accidentally)
     [this.storyModal, this.settingsModal].forEach((m) => {
       m.addEventListener('click', (e) => {
         if (e.target === m) m.classList.add('hidden');
@@ -164,8 +172,6 @@ export class UIController {
         this.settingsModal.classList.add('hidden');
       }
     });
-
-    window.addEventListener('resize', () => this.checkOrientation());
   }
 
   private syncSettingsInputs(): void {
@@ -180,12 +186,6 @@ export class UIController {
     document.getElementById('opt-offset-val')!.textContent = `${s.timingOffsetMs > 0 ? '+' : ''}${s.timingOffsetMs}ms`;
   }
 
-  public checkOrientation(): void {
-    if (this.portraitDismissed) return;
-    const isPortraitPhone = window.innerHeight > window.innerWidth && window.innerWidth < 768;
-    this.portraitBanner.classList.toggle('hidden', !isPortraitPhone);
-  }
-
   public setModelReady(ok: boolean, message?: string): void {
     this.loadingStatus.textContent = message ?? (ok ? '準備が整いました — 涙蔵があなたを待っています' : '3Dモデル読み込み中…');
     this.loadingStatus.classList.toggle('ready', ok);
@@ -193,9 +193,36 @@ export class UIController {
 
   public enterGame(): void {
     this.titleScreen.classList.add('fade-out');
-    setTimeout(() => this.titleScreen.classList.add('hidden'), 550);
+    setTimeout(() => {
+      if (this.titleScreen.classList.contains('fade-out')) {
+        this.titleScreen.classList.add('hidden');
+      }
+    }, 550);
     this.hud.classList.remove('hidden');
+    this.pauseModal.classList.add('hidden');
     this.updateHUD();
+  }
+
+  public showPauseModal(visible: boolean, currentCombo = 0): void {
+    if (visible) {
+      this.pauseStatCombo.textContent = String(currentCombo);
+      this.pauseStatTears.textContent = formatNumber(this.gsm.state.tears);
+      this.pauseStatGems.textContent = formatNumber(this.gsm.state.gems);
+      this.craftDrawer.classList.add('hidden');
+    }
+    this.pauseModal.classList.toggle('hidden', !visible);
+  }
+
+  public returnToLobby(): void {
+    this.pauseModal.classList.add('hidden');
+    this.storyModal.classList.add('hidden');
+    this.settingsModal.classList.add('hidden');
+    this.craftDrawer.classList.add('hidden');
+    this.polishPrompt.classList.add('hidden');
+    this.hud.classList.add('hidden');
+    this.floatingLayer.innerHTML = '';
+
+    this.titleScreen.classList.remove('hidden', 'fade-out');
   }
 
   public updateHUD(activeTrackId?: TrackId): void {
