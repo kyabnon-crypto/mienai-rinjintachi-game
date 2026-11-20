@@ -30,16 +30,30 @@ export class AudioEngine {
   // Fallback clock if audio element hasn't started progressing yet
   private fallbackTime = 0;
 
-  public async init(initialTrack: TrackId): Promise<void> {
+  public unlockOnGesture(): void {
+    if (this.ctx && this.ctx.state === 'suspended') {
+      void this.ctx.resume();
+    }
+    const ch = this.channels[this.currentTrackId];
+    if (ch && ch.el.paused && this.isReady) {
+      void ch.el.play().catch(() => {});
+    }
+  }
+
+  public init(initialTrack: TrackId): void {
     if (this.ctx) {
-      if (this.ctx.state === 'suspended') {
-        await this.ctx.resume();
-      }
+      this.unlockOnGesture();
       return;
     }
 
-    const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+    const AudioCtx =
+      window.AudioContext ||
+      (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
     this.ctx = new AudioCtx();
+    // Kick off resume synchronously inside user gesture (critical for iOS Safari)
+    if (this.ctx.state === 'suspended') {
+      void this.ctx.resume();
+    }
 
     this.masterBgmGain = this.ctx.createGain();
     this.masterBgmGain.gain.value = this.bgmVolume;
@@ -62,6 +76,7 @@ export class AudioEngine {
       el.loop = true;
       el.preload = 'auto';
       el.crossOrigin = 'anonymous';
+      el.setAttribute('playsinline', '');
       const source = this.ctx!.createMediaElementSource(el);
       const gain = this.ctx!.createGain();
       gain.gain.value = 0;
@@ -71,7 +86,8 @@ export class AudioEngine {
     });
 
     this.isReady = true;
-    await this.switchTrack(initialTrack, 0, 0.8);
+    // Start initial track synchronously within the click/tap gesture for mobile Safari
+    void this.switchTrack(initialTrack, 0, 0.6);
   }
 
   public setBgmVolume(v: number): void {
@@ -95,7 +111,7 @@ export class AudioEngine {
   public async switchTrack(trackId: TrackId, startOffsetSec?: number, fadeSec = 0.7): Promise<void> {
     if (!this.ctx) return;
     if (this.ctx.state === 'suspended') {
-      await this.ctx.resume();
+      void this.ctx.resume();
     }
 
     const now = this.ctx.currentTime;
@@ -129,7 +145,6 @@ export class AudioEngine {
         // Ignore seek before metadata loaded
       }
     } else if (prevId !== trackId) {
-      // Keep musical momentum if switching tracks freely
       try {
         if (next.el.paused && next.el.currentTime === 0 && TRACKS[trackId].feverStartOffsetSec > 0 && trackId === 'remix') {
           next.el.currentTime = TRACKS[trackId].feverStartOffsetSec;
@@ -139,15 +154,18 @@ export class AudioEngine {
       }
     }
 
-    try {
-      await next.el.play();
-    } catch {
-      // Autoplay fallback handled on next user gesture
-    }
+    // Trigger play() immediately without awaiting resume() first so iOS Safari allows audio
+    const playPromise = next.el.play();
 
     next.gain.gain.cancelScheduledValues(now);
     next.gain.gain.setValueAtTime(next.gain.gain.value, now);
     next.gain.gain.linearRampToValueAtTime(1, now + fadeSec);
+
+    try {
+      await playPromise;
+    } catch {
+      // Autoplay fallback handled on next user gesture via unlockOnGesture()
+    }
   }
 
   public update(dt: number): {

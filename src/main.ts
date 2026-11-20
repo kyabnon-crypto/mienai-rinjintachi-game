@@ -32,11 +32,11 @@ async function bootstrap(): Promise<void> {
   let prevUnlockedStories = gsm.getUnlockedEpisodesCount();
 
   const ui = new UIController(gsm, {
-    onStart: async () => {
+    onStart: () => {
       if (started) return;
       started = true;
       ui.enterGame();
-      await audio.init(gsm.state.selectedTrack);
+      audio.init(gsm.state.selectedTrack);
       const tickInfo = audio.update(0);
       rhythm.resetBeatCursors(tickInfo.beatFloat);
       ui.updateHUD(audio.currentTrackId);
@@ -189,6 +189,7 @@ async function bootstrap(): Promise<void> {
   // Pointer & touch interaction on the 3D canvas
   const onPointerDown = (e: PointerEvent) => {
     if (!started) return;
+    audio.unlockOnGesture();
     const nx = (e.clientX / window.innerWidth) * 2 - 1;
     const ny = -((e.clientY / window.innerHeight) * 2 - 1);
     vault.setPointerNdc(nx, ny);
