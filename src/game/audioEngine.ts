@@ -71,8 +71,8 @@ export class AudioEngine {
     this.analyser.connect(this.ctx.destination);
     this.masterSeGain.connect(this.ctx.destination);
 
-    // Pre-wire all 3 tracks for instantaneous seamless crossfading
-    (['dreamy', 'normal', 'remix'] as TrackId[]).forEach((id) => {
+    // Pre-wire all 3 official tracks for instantaneous seamless crossfading
+    (['dreamy', 'normal', 'instrumental'] as TrackId[]).forEach((id) => {
       const el = new Audio(TRACKS[id].url);
       el.loop = false;
       el.preload = 'auto';
@@ -108,6 +108,11 @@ export class AudioEngine {
     this.timingOffsetMs = ms;
   }
 
+  public setCurrentTrackLoop(loop: boolean): void {
+    const ch = this.channels[this.currentTrackId];
+    if (ch) ch.el.loop = loop;
+  }
+
   public async switchTrack(
     trackId: TrackId,
     startOffsetSec?: number,
@@ -123,7 +128,7 @@ export class AudioEngine {
     this.currentTrackId = trackId;
 
     // Fade out other channels
-    (['dreamy', 'normal', 'remix'] as TrackId[]).forEach((id) => {
+    (['dreamy', 'normal', 'instrumental'] as TrackId[]).forEach((id) => {
       const ch = this.channels[id];
       if (!ch) return;
       if (id !== trackId) {
@@ -167,11 +172,16 @@ export class AudioEngine {
     }
   }
 
-  public pause(): void {
+  /** Pause only BGM while keeping Web Audio active so craft/UI chimes remain audible. */
+  public pauseBgm(): void {
     const ch = this.channels[this.currentTrackId];
     if (ch && !ch.el.paused) {
       ch.el.pause();
     }
+  }
+
+  public pause(): void {
+    this.pauseBgm();
     if (this.ctx && this.ctx.state === 'running') {
       void this.ctx.suspend();
     }
@@ -189,7 +199,7 @@ export class AudioEngine {
 
   public stopAll(): void {
     const now = this.ctx?.currentTime ?? 0;
-    (['dreamy', 'normal', 'remix'] as TrackId[]).forEach((id) => {
+    (['dreamy', 'normal', 'instrumental'] as TrackId[]).forEach((id) => {
       const ch = this.channels[id];
       if (!ch) return;
       if (this.ctx) {

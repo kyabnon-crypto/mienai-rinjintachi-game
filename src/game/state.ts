@@ -44,9 +44,17 @@ export class GameStateManager {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (!raw) return fallback;
       const parsed = JSON.parse(raw) as Partial<SaveState>;
+      const rawTrack = parsed.selectedTrack as string | undefined;
+      const safeTrack: TrackId =
+        rawTrack === 'dreamy' || rawTrack === 'normal' || rawTrack === 'instrumental'
+          ? rawTrack
+          : rawTrack === 'remix'
+            ? 'instrumental'
+            : 'dreamy';
       const merged: SaveState = {
         ...fallback,
         ...parsed,
+        selectedTrack: safeTrack,
         upgrades: { ...fallback.upgrades, ...(parsed.upgrades ?? {}) },
         settings: { ...fallback.settings, ...(parsed.settings ?? {}) },
         readEpisodes: Array.isArray(parsed.readEpisodes) ? parsed.readEpisodes : [],
@@ -125,7 +133,7 @@ export class GameStateManager {
     const mb = this.state.upgrades.musicbox;
     if (trackId === 'dreamy') return true;
     if (trackId === 'normal') return mb >= 1;
-    if (trackId === 'remix') return mb >= 3;
+    if (trackId === 'instrumental') return mb >= 2;
     return false;
   }
 

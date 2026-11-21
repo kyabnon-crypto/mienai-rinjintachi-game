@@ -1,4 +1,4 @@
-export type TrackId = 'dreamy' | 'normal' | 'remix';
+export type TrackId = 'dreamy' | 'normal' | 'instrumental';
 
 export type TearKind = 'sad' | 'frustrated' | 'happy' | 'farewell' | 'reunion';
 

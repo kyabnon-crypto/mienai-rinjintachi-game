@@ -31,6 +31,7 @@ export interface UIActions {
   onPause: () => void;
   onResume: () => void;
   onReturnToLobby: () => void;
+  onOverlayVisibilityChange: (open: boolean) => void;
   onSelectTrack: (trackId: TrackId) => void;
   onBuyUpgrade: (id: UpgradeId) => void;
   onClickPolish: () => void;
@@ -106,6 +107,14 @@ export class UIController {
     this.syncSettingsInputs();
   }
 
+  private notifyOverlayState(): void {
+    const anyOpen =
+      !this.craftDrawer.classList.contains('hidden') ||
+      !this.storyModal.classList.contains('hidden') ||
+      !this.settingsModal.classList.contains('hidden');
+    this.actions.onOverlayVisibilityChange(anyOpen);
+  }
+
   private bindEvents(): void {
     this.btnStart.addEventListener('click', () => this.actions.onStart());
 
@@ -113,6 +122,7 @@ export class UIController {
     document.getElementById('btn-resume')!.addEventListener('click', () => this.actions.onResume());
     document.getElementById('btn-pause-settings')!.addEventListener('click', () => {
       this.settingsModal.classList.remove('hidden');
+      this.notifyOverlayState();
     });
     document.getElementById('btn-return-lobby')!.addEventListener('click', () => {
       this.actions.onReturnToLobby();
@@ -122,6 +132,7 @@ export class UIController {
     document.getElementById('btn-result-craft')!.addEventListener('click', () => {
       this.renderCraftList();
       this.craftDrawer.classList.remove('hidden');
+      this.notifyOverlayState();
     });
     document.getElementById('btn-result-lobby')!.addEventListener('click', () => {
       this.actions.onReturnToLobby();
@@ -141,30 +152,39 @@ export class UIController {
       const opening = this.craftDrawer.classList.contains('hidden');
       this.craftDrawer.classList.toggle('hidden');
       if (opening) this.renderCraftList();
+      this.notifyOverlayState();
     });
     document.getElementById('btn-close-craft')!.addEventListener('click', () => {
       this.craftDrawer.classList.add('hidden');
+      this.notifyOverlayState();
     });
 
     document.getElementById('btn-story')!.addEventListener('click', () => {
       this.renderStoryList();
       this.storyModal.classList.remove('hidden');
+      this.notifyOverlayState();
     });
     document.getElementById('btn-close-story')!.addEventListener('click', () => {
       this.storyModal.classList.add('hidden');
       this.updateHUD();
+      this.notifyOverlayState();
     });
 
     document.getElementById('btn-settings')!.addEventListener('click', () => {
       this.settingsModal.classList.remove('hidden');
+      this.notifyOverlayState();
     });
     document.getElementById('btn-close-settings')!.addEventListener('click', () => {
       this.settingsModal.classList.add('hidden');
+      this.notifyOverlayState();
     });
 
     [this.storyModal, this.settingsModal].forEach((m) => {
       m.addEventListener('click', (e) => {
-        if (e.target === m) m.classList.add('hidden');
+        if (e.target === m) {
+          m.classList.add('hidden');
+          this.notifyOverlayState();
+        }
       });
     });
 
@@ -192,6 +212,7 @@ export class UIController {
       if (window.confirm('涙蔵のセーブデータを初期化しますか？')) {
         this.actions.onResetSave();
         this.settingsModal.classList.add('hidden');
+        this.notifyOverlayState();
       }
     });
   }
@@ -364,7 +385,7 @@ export class UIController {
       this.btnFever.classList.remove('active');
       this.btnFever.classList.toggle('ready', ready);
       this.btnFever.textContent = ready
-        ? '✨ CRYSTAL RUSH 発動！（Remix）'
+        ? '✨ CRYSTAL RUSH 発動！'
         : `CRYSTAL RUSH ${Math.floor(gaugePct)}%`;
     }
   }

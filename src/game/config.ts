@@ -58,6 +58,9 @@ export const TEAR_TYPES: TearTypeDef[] = [
   },
 ];
 
+// 専用RUSH楽曲は後日差し替え予定（設定するとCRYSTAL RUSH突入時に自動切替）
+export const FEVER_TRACK_URL: string | null = null;
+
 export const TRACKS: Record<TrackId, TrackDef> = {
   dreamy: {
     id: 'dreamy',
@@ -74,7 +77,7 @@ export const TRACKS: Record<TrackId, TrackDef> = {
   },
   normal: {
     id: 'normal',
-    title: 'ナミダビン — Original',
+    title: 'ナミダビン — 通常版',
     shortLabel: '✨ 通常版',
     url: './assets/audio/namidabin_normal.mp3',
     bpm: 108.5,
@@ -85,18 +88,18 @@ export const TRACKS: Record<TrackId, TrackDef> = {
     feverStartOffsetSec: 0,
     unlockMusicboxLevel: 1,
   },
-  remix: {
-    id: 'remix',
-    title: 'ナミダビン — Digital Math Punk Remix',
-    shortLabel: '🔥 Remix',
-    url: './assets/audio/namidabin_remix.mp3',
-    bpm: 108.5,
+  instrumental: {
+    id: 'instrumental',
+    title: 'ナミダビン — Instrumental',
+    shortLabel: '🎹 Inst',
+    url: './assets/audio/namidabin_instrumental.mp3',
+    bpm: 101.0,
     durationSec: 62,
-    spawnEveryBeats: 0.5,
-    approachBeats: 1.5,
-    valueMultiplier: 2.2,
-    feverStartOffsetSec: 22,
-    unlockMusicboxLevel: 3,
+    spawnEveryBeats: 0.75,
+    approachBeats: 1.65,
+    valueMultiplier: 1.75,
+    feverStartOffsetSec: 0,
+    unlockMusicboxLevel: 2,
   },
 };
 
@@ -167,7 +170,7 @@ export const UPGRADES: UpgradeDef[] = [
     id: 'musicbox',
     name: 'オルゴール結晶を磨く',
     propName: '天井の光のオルゴール',
-    description: '楽曲アレンジ（通常版・Remix）の常時切替を解放し、CRYSTAL RUSHの時間を延ばします。',
+    description: '楽曲バージョン（通常版・Instrumental）の切替を解放し、CRYSTAL RUSHの時間を延ばします。',
     maxLevel: 5,
     baseCostTears: 100,
     baseCostGems: 2,
@@ -175,8 +178,8 @@ export const UPGRADES: UpgradeDef[] = [
     effectText: (lv) => {
       const dur = 16 + lv * 2;
       if (lv === 0) return `RUSH ${dur}秒（Lv.1で通常版解放）`;
-      if (lv < 3) return `RUSH ${dur}秒 / 通常版解放済（Lv.3でRemix常時解放）`;
-      return `RUSH ${dur}秒 / 全3アレンジ常時解放！`;
+      if (lv < 2) return `RUSH ${dur}秒 / 通常版解放済（Lv.2でInst解放）`;
+      return `RUSH ${dur}秒 / 全3バージョン解放済！`;
     },
   },
 ];

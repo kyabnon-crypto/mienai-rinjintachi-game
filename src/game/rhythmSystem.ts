@@ -278,16 +278,15 @@ export class RhythmSystem {
     this.cb.onStateDirty();
   }
 
-  public async activateFever(currentSongTimeSec: number): Promise<void> {
+  public async activateFever(_currentSongTimeSec: number): Promise<void> {
     if (this.isFever || this.feverGauge < 100) return;
     this.isFever = true;
     this.feverGauge = 100;
     this.feverRemainingSec = this.gsm.getFeverDurationSec();
-    this.trackBeforeFever = this.audio.currentTrackId;
-    this.resumeSecBeforeFever = currentSongTimeSec;
 
+    // 専用RUSH楽曲は後日差し替え予定：現在は再生中の楽曲を維持して高速フィーバー演出
+    this.audio.setCurrentTrackLoop(true);
     this.audio.playFeverStartSE();
-    await this.audio.switchTrack('remix', TRACKS.remix.feverStartOffsetSec, 0.4, true);
     const info = this.audio.update(0, false);
     this.resetBeatCursors(info.beatFloat);
     this.actor.celebrateHop();
@@ -295,12 +294,11 @@ export class RhythmSystem {
     this.cb.onFeverChange(true, 100, this.feverRemainingSec);
   }
 
-  private async endFever(): Promise<void> {
+  private endFever(): void {
     this.isFever = false;
     this.feverGauge = 0;
     this.feverRemainingSec = 0;
-    const resumeAt = Math.min(TRACKS[this.trackBeforeFever].durationSec - 4, this.resumeSecBeforeFever);
-    await this.audio.switchTrack(this.trackBeforeFever, Math.max(0, resumeAt), 0.7, false);
+    this.audio.setCurrentTrackLoop(false);
     const info = this.audio.update(0, false);
     this.resetBeatCursors(info.beatFloat);
     this.cb.onFeverChange(false, 0, 0);

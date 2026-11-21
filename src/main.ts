@@ -28,6 +28,7 @@ async function bootstrap(): Promise<void> {
 
   let started = false;
   let paused = false;
+  let overlayPaused = false;
   let roundComplete = false;
   let lastBeatFloat = 0;
   let lastSongTimeSec = 0;
@@ -37,6 +38,8 @@ async function bootstrap(): Promise<void> {
   let shownOfflineToast = false;
 
   let prevUnlockedStories = gsm.getUnlockedEpisodesCount();
+
+  const isGameFrozen = () => paused || overlayPaused;
 
   const applyViewportResize = () => {
     viewport.sync();
@@ -48,6 +51,7 @@ async function bootstrap(): Promise<void> {
   const startRound = (trackId: TrackId) => {
     roundComplete = false;
     paused = false;
+    overlayPaused = false;
     rhythm.resetSession(true);
     ui.showResultModal(false);
     ui.showPauseModal(false);
@@ -74,7 +78,9 @@ async function bootstrap(): Promise<void> {
     if (!started || !paused) return;
     paused = false;
     ui.showPauseModal(false);
-    audio.resume();
+    if (!overlayPaused) {
+      audio.resume();
+    }
     void viewport.enterLandscape().then(applyViewportResize);
   };
 
@@ -94,6 +100,7 @@ async function bootstrap(): Promise<void> {
     if (!started) return;
     started = false;
     paused = false;
+    overlayPaused = false;
     roundComplete = false;
     gsm.save();
     audio.stopAll();
@@ -133,8 +140,19 @@ async function bootstrap(): Promise<void> {
     onResume: () => resumeGame(),
     onReturnToLobby: () => returnToLobby(),
 
+    onOverlayVisibilityChange: (open: boolean) => {
+      overlayPaused = open;
+      if (!started || roundComplete) return;
+      if (open) {
+        rhythm.handlePointerUp();
+        audio.pauseBgm();
+      } else if (!paused) {
+        audio.resume();
+      }
+    },
+
     onSelectTrack: async (trackId: TrackId) => {
-      if (paused) return;
+      if (isGameFrozen()) return;
       if (rhythm.isFever) {
         ui.showToast('CRYSTAL RUSH 中です', 'フィーバー終了後に楽曲を切り替えられます', 'gold');
         return;
@@ -143,7 +161,7 @@ async function bootstrap(): Promise<void> {
         const req = TRACKS[trackId].unlockMusicboxLevel;
         ui.showToast(
           `${TRACKS[trackId].shortLabel} は未解放です`,
-          `「オルゴール結晶」を Lv.${req} にすると常時切替できます`,
+          `「オルゴール結晶」を Lv.${req} にすると切替できます`,
           'blue'
         );
         return;
@@ -168,24 +186,23 @@ async function bootstrap(): Promise<void> {
       ui.updateHUD(audio.currentTrackId);
 
       if (id === 'musicbox' && gsm.state.upgrades.musicbox === 1) {
-        ui.showToast('✨ 通常版アレンジ解放！', '右上の楽曲ボタンからいつでも切替できます', 'gold');
-      } else if (id === 'musicbox' && gsm.state.upgrades.musicbox === 3) {
-        ui.showToast('🔥 Digital Math Punk Remix 常時解放！', '超高速モードをいつでも演奏できます', 'gold');
+        ui.showToast('✨ 通常版 解放！', '右上の楽曲ボタンからいつでも切替できます', 'gold');
+      } else if (id === 'musicbox' && gsm.state.upgrades.musicbox === 2) {
+        ui.showToast('🎹 Instrumental バージョン解放！', '全3バージョンの楽曲を演奏できます', 'gold');
       } else {
         checkStoryUnlock();
       }
     },
 
     onClickPolish: () => {
-      if (!started || paused || roundComplete) return;
+      if (!started || isGameFrozen() || roundComplete) return;
       rhythm.startPolish(lastBeatFloat);
     },
 
     onClickFever: () => {
-      if (!started || paused || roundComplete) return;
+      if (!started || isGameFrozen() || roundComplete) return;
       void rhythm.activateFever(lastSongTimeSec);
-      ui.updateHUD('remix');
-      ui.showToast('🔥 CRYSTAL RUSH 発動！', 'Digital Math Punk Remix — 宝石＆結晶 2倍！', 'gold');
+      ui.showToast('🔥 CRYSTAL RUSH 発動！', '宝石＆結晶 2倍！高速採集タイム！', 'gold');
     },
 
     onChangeBgmVol: (val: number) => {
@@ -270,7 +287,7 @@ async function bootstrap(): Promise<void> {
     });
 
   const onPointerDown = (e: PointerEvent) => {
-    if (!started || paused || roundComplete) return;
+    if (!started || isGameFrozen() || roundComplete) return;
     audio.unlockOnGesture();
     const { width, height } = viewport.getSize();
     const pt = viewport.clientToVirtual(e.clientX, e.clientY);
@@ -281,7 +298,7 @@ async function bootstrap(): Promise<void> {
   };
 
   const onPointerMove = (e: PointerEvent) => {
-    if (paused) return;
+    if (isGameFrozen()) return;
     const { width, height } = viewport.getSize();
     const pt = viewport.clientToVirtual(e.clientX, e.clientY);
     const nx = (pt.x / width) * 2 - 1;
@@ -303,7 +320,7 @@ async function bootstrap(): Promise<void> {
 
   document.getElementById('polish-prompt')!.addEventListener('pointerdown', (e) => {
     e.stopPropagation();
-    if (started && !paused && !roundComplete && rhythm.isPolishing) {
+    if (started && !isGameFrozen() && !roundComplete && rhythm.isPolishing) {
       rhythm.tapPolish(lastBeatFloat);
     }
   });
@@ -311,19 +328,19 @@ async function bootstrap(): Promise<void> {
   window.addEventListener('keydown', (e) => {
     if (!started || e.repeat) return;
     if (e.code === 'Escape' || e.code === 'KeyP') {
-      if (roundComplete) return;
+      if (roundComplete || overlayPaused) return;
       e.preventDefault();
       if (paused) resumeGame();
       else pauseGame();
       return;
     }
-    if (paused || roundComplete) return;
+    if (isGameFrozen() || roundComplete) return;
     if (['Space', 'KeyZ', 'KeyX', 'KeyJ', 'KeyK'].includes(e.code)) {
       e.preventDefault();
       rhythm.handleKeySnap(lastBeatFloat);
     } else if (e.code === 'KeyF' && rhythm.feverGauge >= 100 && !rhythm.isFever) {
       void rhythm.activateFever(lastSongTimeSec);
-      ui.updateHUD('remix');
+      ui.showToast('🔥 CRYSTAL RUSH 発動！', '宝石＆結晶 2倍！高速採集タイム！', 'gold');
     }
   });
 
@@ -349,7 +366,8 @@ async function bootstrap(): Promise<void> {
     const dt = Math.min(0.05, (now - prevTime) / 1000);
     prevTime = now;
 
-    if (paused) {
+    if (isGameFrozen()) {
+      // Keep rendering the live 3D vault (so prop upgrades light up visually) without advancing gameplay/music
       vault.renderer.render(vault.scene, vault.camera);
       return;
     }
@@ -380,7 +398,6 @@ async function bootstrap(): Promise<void> {
         gsm.save();
       }
 
-      // Finish 62s round cleanly once song ends (never interrupting Fever or Polishing)
       if (beatInfo.ended && !rhythm.isFever && !rhythm.isPolishing) {
         finishRound();
       }
