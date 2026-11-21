@@ -1,6 +1,6 @@
 import { STORY_EPISODES, TRACKS, UPGRADES, getUpgradeCost } from './config';
 import { GameStateManager } from './state';
-import { Judgment, TearTypeDef, TrackId, UpgradeId } from './types';
+import { Judgment, SessionStats, TearTypeDef, TrackId, UpgradeId } from './types';
 
 function formatNumber(n: number): string {
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(2)}M`;
@@ -18,8 +18,16 @@ function formatTallyMarks(count: number): string {
   return `${'正'.repeat(shownFull)}${suffix}${remChars[rem]}`;
 }
 
+function formatClock(sec: number): string {
+  const s = Math.max(0, Math.ceil(sec));
+  const m = Math.floor(s / 60);
+  const rem = s % 60;
+  return `${m}:${String(rem).padStart(2, '0')}`;
+}
+
 export interface UIActions {
   onStart: () => void;
+  onRetry: () => void;
   onPause: () => void;
   onResume: () => void;
   onReturnToLobby: () => void;
@@ -43,6 +51,8 @@ export class UIController {
   private hud = document.getElementById('hud')!;
   private floatingLayer = document.getElementById('floating-layer')!;
 
+  private elSongProgressFill = document.getElementById('song-progress-fill')!;
+  private elTimeLeft = document.getElementById('hud-time-left')!;
   private elVaultRank = document.getElementById('hud-vault-rank')!;
   private elTears = document.getElementById('hud-tears')!;
   private elGems = document.getElementById('hud-gems')!;
@@ -75,6 +85,10 @@ export class UIController {
   private pauseStatTears = document.getElementById('pause-stat-tears')!;
   private pauseStatGems = document.getElementById('pause-stat-gems')!;
 
+  private resultModal = document.getElementById('result-modal')!;
+  private resultTrackName = document.getElementById('result-track-name')!;
+  private resultRank = document.getElementById('result-rank')!;
+
   private storyModal = document.getElementById('story-modal')!;
   private storyList = document.getElementById('story-list')!;
   private storyBadge = document.getElementById('story-badge')!;
@@ -101,6 +115,15 @@ export class UIController {
       this.settingsModal.classList.remove('hidden');
     });
     document.getElementById('btn-return-lobby')!.addEventListener('click', () => {
+      this.actions.onReturnToLobby();
+    });
+
+    document.getElementById('btn-retry')!.addEventListener('click', () => this.actions.onRetry());
+    document.getElementById('btn-result-craft')!.addEventListener('click', () => {
+      this.renderCraftList();
+      this.craftDrawer.classList.remove('hidden');
+    });
+    document.getElementById('btn-result-lobby')!.addEventListener('click', () => {
       this.actions.onReturnToLobby();
     });
 
@@ -139,7 +162,6 @@ export class UIController {
       this.settingsModal.classList.add('hidden');
     });
 
-    // Backdrop click closes secondary modals (not pause modal accidentally)
     [this.storyModal, this.settingsModal].forEach((m) => {
       m.addEventListener('click', (e) => {
         if (e.target === m) m.classList.add('hidden');
@@ -200,6 +222,7 @@ export class UIController {
     }, 550);
     this.hud.classList.remove('hidden');
     this.pauseModal.classList.add('hidden');
+    this.resultModal.classList.add('hidden');
     this.updateHUD();
   }
 
@@ -213,8 +236,49 @@ export class UIController {
     this.pauseModal.classList.toggle('hidden', !visible);
   }
 
+  public showResultModal(visible: boolean, trackTitle = '', stats?: SessionStats): void {
+    if (visible && stats) {
+      this.craftDrawer.classList.add('hidden');
+      this.pauseModal.classList.add('hidden');
+      this.resultTrackName.textContent = `♪ ${trackTitle}`;
+
+      const total = stats.perfect + stats.great + stats.good + stats.miss;
+      const weightedHits = stats.perfect + stats.great * 0.8 + stats.good * 0.5;
+      const acc = total > 0 ? weightedHits / total : 0;
+
+      let rank = 'C';
+      let rankClass = 'rank-c';
+      if (acc >= 0.85 && total >= 12) {
+        rank = 'S';
+        rankClass = 'rank-s';
+      } else if (acc >= 0.68 && total >= 8) {
+        rank = 'A';
+        rankClass = 'rank-a';
+      } else if (acc >= 0.45) {
+        rank = 'B';
+        rankClass = 'rank-b';
+      }
+
+      this.resultRank.textContent = rank;
+      this.resultRank.className = `result-rank ${rankClass}`;
+      document.getElementById('res-perfect')!.textContent = String(stats.perfect);
+      document.getElementById('res-great')!.textContent = String(stats.great);
+      document.getElementById('res-good')!.textContent = String(stats.good);
+      document.getElementById('res-miss')!.textContent = String(stats.miss);
+      document.getElementById('res-max-combo')!.textContent = String(stats.maxCombo);
+      document.getElementById('res-tears')!.textContent = `+${formatNumber(stats.tearsEarned)}`;
+    }
+    this.resultModal.classList.toggle('hidden', !visible);
+  }
+
+  public updateSongProgress(progress: number, remainingSec: number): void {
+    this.elSongProgressFill.style.width = `${Math.max(0, Math.min(100, progress * 100)).toFixed(1)}%`;
+    this.elTimeLeft.textContent = formatClock(remainingSec);
+  }
+
   public returnToLobby(): void {
     this.pauseModal.classList.add('hidden');
+    this.resultModal.classList.add('hidden');
     this.storyModal.classList.add('hidden');
     this.settingsModal.classList.add('hidden');
     this.craftDrawer.classList.add('hidden');
@@ -327,9 +391,13 @@ export class UIController {
     el.style.left = `${x}px`;
     el.style.top = `${y}px`;
     el.style.setProperty('--tear-color', tear.cssColor);
-    el.innerHTML = `<span class="fp-j">${judgment}!</span><span class="fp-v">+${formatNumber(gainTears)}</span>`;
+    if (judgment === 'MISS') {
+      el.innerHTML = `<span class="fp-j">MISS</span>`;
+    } else {
+      el.innerHTML = `<span class="fp-j">${judgment}!</span><span class="fp-v">+${formatNumber(gainTears)}</span>`;
+    }
     this.floatingLayer.appendChild(el);
-    setTimeout(() => el.remove(), 820);
+    setTimeout(() => el.remove(), 760);
   }
 
   public showToast(title: string, subtitle?: string, accent: 'blue' | 'gold' = 'blue'): void {

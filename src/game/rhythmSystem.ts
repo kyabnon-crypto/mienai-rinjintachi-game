@@ -3,7 +3,7 @@ import { AudioEngine } from './audioEngine';
 import { TEAR_TYPES, TRACKS } from './config';
 import { NamidabinActor } from './namidabinActor';
 import { GameStateManager } from './state';
-import { Judgment, TearTypeDef, TrackId } from './types';
+import { Judgment, SessionStats, TearTypeDef, TrackId } from './types';
 import { VaultScene } from './vaultScene';
 
 interface ActiveCrystal {
@@ -13,9 +13,10 @@ interface ActiveCrystal {
   coreMesh: THREE.Mesh;
   ringMesh: THREE.Mesh;
   glowSprite: THREE.Sprite;
+  basePos: THREE.Vector3;
   worldPos: THREE.Vector3;
-  spawnBeat: number;
-  targetBeat: number;
+  ageSec: number;
+  targetSec: number;
   high: boolean;
   lane: 'left' | 'center' | 'right';
   caught: boolean;
@@ -90,6 +91,18 @@ export class RhythmSystem {
   public isFever = false;
   public feverRemainingSec = 0;
   private trackBeforeFever: TrackId = 'dreamy';
+  private resumeSecBeforeFever = 0;
+
+  // Per-round statistics for the 62s Result screen
+  public sessionStats: SessionStats = {
+    perfect: 0,
+    great: 0,
+    good: 0,
+    miss: 0,
+    maxCombo: 0,
+    tearsEarned: 0,
+    gemsEarned: 0,
+  };
 
   // Polishing mini-mode
   public isPolishing = false;
@@ -137,7 +150,7 @@ export class RhythmSystem {
     this.fxCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
   }
 
-  public resetSession(): void {
+  public resetSession(keepFeverGauge = false): void {
     for (const c of this.crystals) {
       this.removeCrystalMesh(c);
     }
@@ -161,11 +174,23 @@ export class RhythmSystem {
     this.combo = 0;
     this.isFever = false;
     this.feverRemainingSec = 0;
+    if (!keepFeverGauge) {
+      this.feverGauge = 0;
+    }
     this.isPolishing = false;
     this.polishStep = 0;
     this.polishPerfectCount = 0;
     this.lastSpawnStep = -1;
     this.lastMeasureIndex = -1;
+    this.sessionStats = {
+      perfect: 0,
+      great: 0,
+      good: 0,
+      miss: 0,
+      maxCombo: 0,
+      tearsEarned: 0,
+      gemsEarned: 0,
+    };
     this.vault.setPolishFocus(false);
     this.fxCtx.clearRect(0, 0, this.viewW, this.viewH);
 
@@ -213,7 +238,6 @@ export class RhythmSystem {
     this.polishStep++;
     this.polishNextBeat = Math.ceil(currentBeat) + 1;
 
-    // 3D sparkle burst on pedestal
     const pedPos = this.vault.getPedestalWorldPosition();
     this.spawnBurst(pedPos, perfect ? 0xfff0a8 : 0x7fc8ff, perfect ? 18 : 10);
     this.spawnRipple(this.viewW * 0.5, this.viewH * 0.48, perfect ? '#fff0a6' : '#7fc8ff', 110);
@@ -232,6 +256,7 @@ export class RhythmSystem {
     const earned = this.gsm.getPolishGemReward(this.polishPerfectCount, this.isFever);
     this.gsm.state.gems += earned;
     this.gsm.state.totalGemsCrafted += 1;
+    this.sessionStats.gemsEarned += earned;
 
     if (!this.isFever) {
       this.feverGauge = Math.min(100, this.feverGauge + 22);
@@ -253,27 +278,31 @@ export class RhythmSystem {
     this.cb.onStateDirty();
   }
 
-  public async activateFever(currentBeat: number): Promise<void> {
+  public async activateFever(currentSongTimeSec: number): Promise<void> {
     if (this.isFever || this.feverGauge < 100) return;
     this.isFever = true;
     this.feverGauge = 100;
     this.feverRemainingSec = this.gsm.getFeverDurationSec();
     this.trackBeforeFever = this.audio.currentTrackId;
+    this.resumeSecBeforeFever = currentSongTimeSec;
 
     this.audio.playFeverStartSE();
-    await this.audio.switchTrack('remix', TRACKS.remix.feverStartOffsetSec, 0.45);
-    this.resetBeatCursors(currentBeat);
+    await this.audio.switchTrack('remix', TRACKS.remix.feverStartOffsetSec, 0.4, true);
+    const info = this.audio.update(0, false);
+    this.resetBeatCursors(info.beatFloat);
     this.actor.celebrateHop();
     this.spawnBurst(this.vault.getPedestalWorldPosition(), 0xffe08a, 30);
     this.cb.onFeverChange(true, 100, this.feverRemainingSec);
   }
 
-  private async endFever(currentBeat: number): Promise<void> {
+  private async endFever(): Promise<void> {
     this.isFever = false;
     this.feverGauge = 0;
     this.feverRemainingSec = 0;
-    await this.audio.switchTrack(this.trackBeforeFever, undefined, 0.8);
-    this.resetBeatCursors(currentBeat);
+    const resumeAt = Math.min(TRACKS[this.trackBeforeFever].durationSec - 4, this.resumeSecBeforeFever);
+    await this.audio.switchTrack(this.trackBeforeFever, Math.max(0, resumeAt), 0.7, false);
+    const info = this.audio.update(0, false);
+    this.resetBeatCursors(info.beatFloat);
     this.cb.onFeverChange(false, 0, 0);
   }
 
@@ -288,29 +317,26 @@ export class RhythmSystem {
       return;
     }
 
-    const hit = this.tryHitAtScreen(clientX, clientY, currentBeat, 92);
+    const hit = this.tryHitAtScreen(clientX, clientY, 96);
     if (!hit) {
-      // Check if player tapped the glowing central pedestal when bottle is full
       if (this.gsm.isBottleFull()) {
         const pedScreen = this.projectToScreen(this.vault.getPedestalWorldPosition());
-        if (Math.hypot(clientX - pedScreen.x, clientY - pedScreen.y) < 100) {
+        if (Math.hypot(clientX - pedScreen.x, clientY - pedScreen.y) < 104) {
           this.startPolish(currentBeat);
           return;
         }
       }
-      // Subtle ambient ripple on empty tap so tapping feels responsive
       this.spawnRipple(clientX, clientY, 'rgba(159, 210, 255, 0.45)', 42);
     }
   }
 
-  public handlePointerMove(clientX: number, clientY: number, currentBeat: number): void {
+  public handlePointerMove(clientX: number, clientY: number): void {
     if (!this.isPointerDown) return;
     this.trail.push({ x: clientX, y: clientY, life: 1 });
     if (this.trail.length > 26) this.trail.shift();
 
     if (!this.isPolishing) {
-      // Swipe-chaining catches any crystal your finger sweeps across!
-      this.tryHitAtScreen(clientX, clientY, currentBeat, 76);
+      this.tryHitAtScreen(clientX, clientY, 80);
     }
   }
 
@@ -323,26 +349,25 @@ export class RhythmSystem {
       this.tapPolish(currentBeat);
       return;
     }
-    // Snap to crystal closest to its target beat!
     let best: ActiveCrystal | null = null;
-    let bestScore = Infinity;
+    let bestDiff = Infinity;
     for (const c of this.crystals) {
       if (c.caught) continue;
-      const dist = Math.abs(c.targetBeat - currentBeat);
-      if (dist < bestScore && dist < 1.35) {
-        bestScore = dist;
+      const diff = Math.abs(c.targetSec - c.ageSec);
+      if (diff < bestDiff) {
+        bestDiff = diff;
         best = c;
       }
     }
     if (best) {
       const pos = this.projectToScreen(best.worldPos);
-      this.collectCrystal(best, currentBeat, pos.x, pos.y);
+      this.collectCrystal(best, pos.x, pos.y);
     } else if (this.gsm.isBottleFull()) {
       this.startPolish(currentBeat);
     }
   }
 
-  private tryHitAtScreen(x: number, y: number, currentBeat: number, radiusPx: number): boolean {
+  private tryHitAtScreen(x: number, y: number, radiusPx: number): boolean {
     let best: ActiveCrystal | null = null;
     let bestDist = radiusPx;
 
@@ -359,33 +384,43 @@ export class RhythmSystem {
 
     if (best) {
       const sc = this.projectToScreen(best.worldPos);
-      this.collectCrystal(best, currentBeat, sc.x, sc.y);
+      this.collectCrystal(best, sc.x, sc.y);
       return true;
     }
     return false;
   }
 
-  private collectCrystal(c: ActiveCrystal, currentBeat: number, sx: number, sy: number, auto = false): void {
+  private collectCrystal(c: ActiveCrystal, sx: number, sy: number, auto = false): void {
     c.caught = true;
-    const delta = Math.abs(currentBeat - c.targetBeat);
+    const progress = c.ageSec / c.targetSec;
+    const delta = Math.abs(1.0 - progress);
 
     let judgment: Judgment = 'GOOD';
     let judgeMult = 1.0;
     if (auto) {
       judgment = 'GREAT';
       judgeMult = 1.2;
-    } else if (delta <= 0.28) {
+      this.sessionStats.great++;
+    } else if (delta <= 0.2) {
       judgment = 'PERFECT';
       judgeMult = 2.0;
-    } else if (delta <= 0.62) {
+      this.sessionStats.perfect++;
+    } else if (delta <= 0.45) {
       judgment = 'GREAT';
       judgeMult = 1.4;
+      this.sessionStats.great++;
+    } else {
+      this.sessionStats.good++;
     }
 
     this.combo++;
+    if (this.combo > this.sessionStats.maxCombo) {
+      this.sessionStats.maxCombo = this.combo;
+    }
     if (this.combo > this.gsm.state.bestCombo) {
       this.gsm.state.bestCombo = this.combo;
     }
+
     const comboMult = this.getComboMultiplier();
     const trackMult = TRACKS[this.audio.currentTrackId].valueMultiplier;
     const feverMult = this.isFever ? 2.0 : 1.0;
@@ -398,6 +433,8 @@ export class RhythmSystem {
 
     this.gsm.state.tears += gained;
     this.gsm.state.totalTearsEarned += gained;
+    this.sessionStats.tearsEarned += gained;
+
     if (this.gsm.state.bottleCharge < this.gsm.getBottleCapacity()) {
       this.gsm.state.bottleCharge = Math.min(
         this.gsm.getBottleCapacity(),
@@ -437,35 +474,38 @@ export class RhythmSystem {
     return TEAR_TYPES[0];
   }
 
-  private spawnCrystal(currentBeat: number): void {
-    const maxActive = this.isFever ? 10 : 6;
+  private spawnCrystal(): void {
+    const maxActive = this.isFever ? 16 : 10;
     if (this.crystals.length >= maxActive) return;
 
     const anchors = this.vault.getSpawnAnchors();
-    // Alternate lanes for pleasant two-thumb landscape flow!
     const preferred = anchors.filter((a) => a.lane !== this.lastLane);
     const pool = preferred.length > 0 ? preferred : anchors;
     const pick = pool[Math.floor(Math.random() * pool.length)];
     this.lastLane = pick.lane;
 
-    const pos = pick.pos.clone();
-    pos.x += (Math.random() - 0.5) * 0.45;
-    pos.y += (Math.random() - 0.5) * 0.28;
-    pos.z += (Math.random() - 0.5) * 0.45;
+    const basePos = pick.pos.clone();
+    basePos.x += (Math.random() - 0.5) * 0.48;
+    basePos.y += (Math.random() - 0.5) * 0.24 + 0.14;
+    basePos.z += (Math.random() - 0.5) * 0.45;
 
     const tear = this.pickTearType();
     const track = TRACKS[this.audio.currentTrackId];
-    const approachBeats = this.isFever ? 1.85 : track.approachBeats;
+    const approachBeats = this.isFever ? 1.45 : track.approachBeats;
+    const targetSec = (approachBeats * 60) / track.bpm;
 
     const group = new THREE.Group();
-    group.position.copy(pos);
+    group.position.copy(basePos);
+    group.scale.setScalar(0.05);
 
     const coreMat = new THREE.MeshStandardMaterial({
       color: tear.colorHex,
       emissive: tear.emissiveHex,
-      emissiveIntensity: 1.15,
+      emissiveIntensity: 1.2,
       roughness: 0.14,
       metalness: 0.15,
+      transparent: true,
+      opacity: 1,
       flatShading: true,
     });
     const coreMesh = new THREE.Mesh(this.crystalGeo, coreMat);
@@ -504,9 +544,10 @@ export class RhythmSystem {
       coreMesh,
       ringMesh,
       glowSprite,
-      worldPos: pos,
-      spawnBeat: currentBeat,
-      targetBeat: currentBeat + approachBeats,
+      basePos,
+      worldPos: basePos.clone(),
+      ageSec: 0,
+      targetSec,
       high: pick.high,
       lane: pick.lane,
       caught: false,
@@ -543,7 +584,7 @@ export class RhythmSystem {
       control,
       end,
       t: 0,
-      duration: 0.52,
+      duration: 0.48,
     });
   }
 
@@ -570,7 +611,7 @@ export class RhythmSystem {
           Math.sin(phi) * Math.sin(theta) * spd
         ),
         life: 0,
-        maxLife: 0.45 + Math.random() * 0.35,
+        maxLife: 0.42 + Math.random() * 0.32,
       });
     }
   }
@@ -591,22 +632,20 @@ export class RhythmSystem {
   public getPolishRingProgress(currentBeat: number): number {
     if (!this.isPolishing) return 0;
     const rem = this.polishNextBeat - currentBeat;
-    // Wrap smoothly every beat if player waits
     if (rem < -0.45) {
       this.polishNextBeat = Math.ceil(currentBeat) + 1;
     }
     return Math.max(0, Math.min(1.4, this.polishNextBeat - currentBeat));
   }
 
-  public update(dt: number, currentBeat: number, started: boolean): void {
+  public update(dt: number, currentBeat: number, remainingSec: number, started: boolean): void {
     if (started) {
-      // Fever countdown
       if (this.isFever) {
         this.feverRemainingSec -= dt;
         const pct = Math.max(0, (this.feverRemainingSec / this.gsm.getFeverDurationSec()) * 100);
         this.cb.onFeverChange(true, pct, Math.max(0, this.feverRemainingSec));
         if (this.feverRemainingSec <= 0) {
-          void this.endFever(currentBeat);
+          void this.endFever();
         }
       }
 
@@ -619,59 +658,94 @@ export class RhythmSystem {
           const passive = Math.round(shelfLv * 6 * this.gsm.getTearMultiplier());
           this.gsm.state.tears += passive;
           this.gsm.state.totalTearsEarned += passive;
+          this.sessionStats.tearsEarned += passive;
           this.cb.onPassiveResonance(passive);
           this.cb.onStateDirty();
         }
       }
 
-      // Beat-synced crystal spawning (paused cleanly while polishing at pedestal)
-      if (!this.isPolishing) {
+      // Beat-synced crystal spawning (stops 2.4s before song end so finale resolves cleanly)
+      const canSpawn = !this.isPolishing && (this.isFever || remainingSec > 2.4);
+      if (canSpawn) {
         const track = TRACKS[this.audio.currentTrackId];
         const stepSize = this.isFever ? 0.5 : track.spawnEveryBeats;
         const step = Math.floor(currentBeat / stepSize);
         if (step > this.lastSpawnStep) {
           this.lastSpawnStep = step;
-          this.spawnCrystal(currentBeat);
+          this.spawnCrystal();
         }
       }
     }
 
-    // Update active crystals & converging approach rings
+    // Update active crystals strictly via dt-based ageSec so they ALWAYS animate & expire cleanly!
     const survivors: ActiveCrystal[] = [];
     for (const c of this.crystals) {
       if (c.caught) continue;
 
-      const totalBeats = Math.max(0.5, c.targetBeat - c.spawnBeat);
-      const progress = (currentBeat - c.spawnBeat) / totalBeats; // 0 -> 1 (target) -> >1 (late)
+      c.ageSec += dt;
+      const progress = c.ageSec / c.targetSec; // 0 -> 1 (target beat) -> 1.24 (dissolve gone)
 
-      // Gentle float & spin
-      c.coreMesh.rotation.y += dt * 2.1;
-      c.group.position.y = c.worldPos.y + Math.sin(currentBeat * 2.5 + c.id) * 0.06;
+      // Gentle teardrop fall + spin
+      c.coreMesh.rotation.y += dt * 2.4;
+      const fallY = -progress * 0.36;
+      c.worldPos.set(c.basePos.x, c.basePos.y + fallY, c.basePos.z);
+      c.group.position.copy(c.worldPos);
 
-      // Billboard timing ring to face camera
+      // Elastic pop-in -> crisp hold -> fast vanish after beat
+      const coreMat = c.coreMesh.material as THREE.MeshStandardMaterial;
+      const ringMat = c.ringMesh.material as THREE.MeshBasicMaterial;
+      const glowMat = c.glowSprite.material as THREE.SpriteMaterial;
+
+      if (progress < 0.15) {
+        const pop = Math.min(1, progress / 0.15);
+        const ease = 1 - Math.pow(1 - pop, 3);
+        c.group.scale.setScalar(0.1 + ease * 0.9);
+      } else if (progress <= 1.0) {
+        c.group.scale.setScalar(1.0);
+      } else {
+        // Rapid dissolve after target beat so missed tears disappear briskly
+        const fade = Math.max(0, 1 - (progress - 1.0) / 0.24);
+        c.group.scale.setScalar(0.2 + fade * 0.8);
+        coreMat.opacity = fade;
+        glowMat.opacity = fade * 0.65;
+      }
+
+      // Billboard timing ring shrinks tightly onto crystal
       c.ringMesh.quaternion.copy(this.vault.camera.quaternion);
-      const ringScale = Math.max(0.75, 2.55 - progress * 1.65);
+      const ringScale = Math.max(0.72, 2.45 - Math.min(1.12, progress) * 1.55);
       c.ringMesh.scale.setScalar(ringScale);
 
-      // Highlight brightly inside PERFECT window!
-      const inPerfect = Math.abs(1 - progress) < 0.14;
-      const ringMat = c.ringMesh.material as THREE.MeshBasicMaterial;
-      ringMat.opacity = progress < 1.25 ? (inPerfect ? 1.0 : 0.72) : Math.max(0, 1 - (progress - 1.25) * 3);
+      const inPerfect = progress >= 0.82 && progress <= 1.1;
+      ringMat.opacity =
+        progress <= 1.0
+          ? inPerfect
+            ? 1.0
+            : 0.72
+          : Math.max(0, 1 - (progress - 1.0) / 0.2);
       ringMat.color.setHex(inPerfect ? 0xffffff : c.tear.colorHex);
 
-      // Ladder auto-catch right at target beat if upgraded!
-      if (progress >= 1.0 && this.gsm.getLadderAutoCatchChance() > 0 && Math.random() < this.gsm.getLadderAutoCatchChance() * dt * 8) {
+      // Ladder auto-catch right on beat if upgraded
+      if (
+        progress >= 0.96 &&
+        progress <= 1.06 &&
+        this.gsm.getLadderAutoCatchChance() > 0 &&
+        Math.random() < this.gsm.getLadderAutoCatchChance() * dt * 10
+      ) {
         const sc = this.projectToScreen(c.worldPos);
-        this.collectCrystal(c, currentBeat, sc.x, sc.y, true);
+        this.collectCrystal(c, sc.x, sc.y, true);
         continue;
       }
 
-      // Expired / missed
-      if (progress > 1.38) {
+      // Missed — dissolve cleanly into mist right after beat window!
+      if (progress >= 1.24) {
+        this.sessionStats.miss++;
+        const sc = this.projectToScreen(c.worldPos);
+        this.spawnBurst(c.worldPos, 0x8bb6db, 5);
         if (this.combo > 0 && !this.isFever) {
           this.combo = 0;
           this.cb.onComboChange(0, 1.0);
         }
+        this.cb.onJudgment('MISS', sc.x, sc.y, 0, c.tear);
         this.removeCrystalMesh(c);
         continue;
       }
@@ -720,7 +794,6 @@ export class RhythmSystem {
     }
     this.particles = aliveParts;
 
-    // Render 2D FX Canvas (ripples + swipe ribbon)
     this.render2DFx(dt);
   }
 
@@ -728,7 +801,6 @@ export class RhythmSystem {
     const ctx = this.fxCtx;
     ctx.clearRect(0, 0, this.viewW, this.viewH);
 
-    // Expanding judgment ripples
     const nextRipples: ScreenRipple[] = [];
     for (const r of this.ripples) {
       r.radius += (r.maxRadius - r.radius) * Math.min(1, dt * 11);
@@ -747,7 +819,6 @@ export class RhythmSystem {
     }
     this.ripples = nextRipples;
 
-    // Luminous swipe trail
     const nextTrail: TrailPoint[] = [];
     for (const pt of this.trail) {
       pt.life -= dt * 4.2;

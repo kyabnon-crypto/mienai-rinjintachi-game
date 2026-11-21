@@ -112,7 +112,7 @@ export class GameStateManager {
   }
 
   public getFeverDurationSec(): number {
-    return 24 + this.state.upgrades.musicbox * 4;
+    return 16 + this.state.upgrades.musicbox * 2;
   }
 
   public getLadderAutoCatchChance(): number {

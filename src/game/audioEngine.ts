@@ -27,15 +27,15 @@ export class AudioEngine {
   public timingOffsetMs = 0;
   public isReady = false;
 
-  // Fallback clock if audio element hasn't started progressing yet
-  private fallbackTime = 0;
+  // Monotonic clock prevents mobile buffering jumps from ever freezing spawned crystals
+  private monotonicTime = 0;
 
   public unlockOnGesture(): void {
     if (this.ctx && this.ctx.state === 'suspended') {
       void this.ctx.resume();
     }
     const ch = this.channels[this.currentTrackId];
-    if (ch && ch.el.paused && this.isReady) {
+    if (ch && ch.el.paused && !ch.el.ended && this.isReady) {
       void ch.el.play().catch(() => {});
     }
   }
@@ -43,7 +43,7 @@ export class AudioEngine {
   public init(initialTrack: TrackId): void {
     if (this.ctx) {
       this.unlockOnGesture();
-      void this.switchTrack(initialTrack, 0, 0.6);
+      void this.switchTrack(initialTrack, 0, 0.5, false);
       return;
     }
 
@@ -74,7 +74,7 @@ export class AudioEngine {
     // Pre-wire all 3 tracks for instantaneous seamless crossfading
     (['dreamy', 'normal', 'remix'] as TrackId[]).forEach((id) => {
       const el = new Audio(TRACKS[id].url);
-      el.loop = true;
+      el.loop = false;
       el.preload = 'auto';
       el.crossOrigin = 'anonymous';
       el.setAttribute('playsinline', '');
@@ -87,8 +87,7 @@ export class AudioEngine {
     });
 
     this.isReady = true;
-    // Start initial track synchronously within the click/tap gesture for mobile Safari
-    void this.switchTrack(initialTrack, 0, 0.6);
+    void this.switchTrack(initialTrack, 0, 0.5, false);
   }
 
   public setBgmVolume(v: number): void {
@@ -109,14 +108,18 @@ export class AudioEngine {
     this.timingOffsetMs = ms;
   }
 
-  public async switchTrack(trackId: TrackId, startOffsetSec?: number, fadeSec = 0.7): Promise<void> {
+  public async switchTrack(
+    trackId: TrackId,
+    startOffsetSec?: number,
+    fadeSec = 0.65,
+    loop = false
+  ): Promise<void> {
     if (!this.ctx) return;
     if (this.ctx.state === 'suspended') {
       void this.ctx.resume();
     }
 
     const now = this.ctx.currentTime;
-    const prevId = this.currentTrackId;
     this.currentTrackId = trackId;
 
     // Fade out other channels
@@ -138,6 +141,7 @@ export class AudioEngine {
 
     const next = this.channels[trackId];
     if (!next) return;
+    next.el.loop = loop;
 
     if (typeof startOffsetSec === 'number') {
       try {
@@ -145,17 +149,11 @@ export class AudioEngine {
       } catch {
         // Ignore seek before metadata loaded
       }
-    } else if (prevId !== trackId) {
-      try {
-        if (next.el.paused && next.el.currentTime === 0 && TRACKS[trackId].feverStartOffsetSec > 0 && trackId === 'remix') {
-          next.el.currentTime = TRACKS[trackId].feverStartOffsetSec;
-        }
-      } catch {
-        // Ignore
-      }
+      this.monotonicTime = startOffsetSec;
+    } else {
+      this.monotonicTime = next.el.currentTime || 0;
     }
 
-    // Trigger play() immediately without awaiting resume() first so iOS Safari allows audio
     const playPromise = next.el.play();
 
     next.gain.gain.cancelScheduledValues(now);
@@ -184,7 +182,7 @@ export class AudioEngine {
       void this.ctx.resume();
     }
     const ch = this.channels[this.currentTrackId];
-    if (ch && ch.el.paused && this.isReady) {
+    if (ch && ch.el.paused && !ch.el.ended && this.isReady) {
       void ch.el.play().catch(() => {});
     }
   }
@@ -205,11 +203,15 @@ export class AudioEngine {
         // Ignore
       }
     });
-    this.fallbackTime = 0;
+    this.monotonicTime = 0;
   }
 
   public update(dt: number, paused = false): {
     songTimeSec: number;
+    durationSec: number;
+    progress: number;
+    remainingSec: number;
+    ended: boolean;
     bpm: number;
     beatFloat: number;
     beatIndex: number;
@@ -217,16 +219,41 @@ export class AudioEngine {
     energy: number;
     bass: number;
   } {
-    if (!paused) {
-      this.fallbackTime += dt;
-    }
     const track = TRACKS[this.currentTrackId];
     const ch = this.channels[this.currentTrackId];
-    const rawTime = ch && !ch.el.paused && ch.el.currentTime > 0 ? ch.el.currentTime : this.fallbackTime;
-    const songTimeSec = Math.max(0, rawTime + this.timingOffsetMs / 1000);
+
+    if (!paused) {
+      const elPlaying = ch && !ch.el.paused && !ch.el.ended && ch.el.readyState >= 2 && ch.el.currentTime > 0.02;
+      if (elPlaying) {
+        // If audio looped during fever, allow wrap; otherwise stay strictly monotonic
+        if (ch.el.loop && ch.el.currentTime + 2 < this.monotonicTime) {
+          this.monotonicTime = ch.el.currentTime;
+        } else {
+          // Gently track live audio element without jumping backwards
+          const audioT = ch.el.currentTime;
+          if (audioT > this.monotonicTime) {
+            this.monotonicTime = audioT;
+          } else {
+            this.monotonicTime += dt;
+          }
+        }
+      } else {
+        this.monotonicTime += dt;
+      }
+    }
+
+    const durationSec =
+      ch && Number.isFinite(ch.el.duration) && ch.el.duration > 10
+        ? ch.el.duration
+        : track.durationSec;
+
+    const songTimeSec = Math.max(0, this.monotonicTime + this.timingOffsetMs / 1000);
     const beatFloat = (songTimeSec * track.bpm) / 60;
     const beatIndex = Math.floor(beatFloat) % 4;
     const beatPhase = beatFloat - Math.floor(beatFloat);
+    const progress = Math.min(1, this.monotonicTime / durationSec);
+    const remainingSec = Math.max(0, durationSec - this.monotonicTime);
+    const ended = !ch?.el.loop && (Boolean(ch?.el.ended) || this.monotonicTime >= durationSec);
 
     let energy = 0.15 + 0.15 * Math.pow(1 - beatPhase, 2);
     let bass = energy;
@@ -247,7 +274,19 @@ export class AudioEngine {
       }
     }
 
-    return { songTimeSec, bpm: track.bpm, beatFloat, beatIndex, beatPhase, energy, bass };
+    return {
+      songTimeSec,
+      durationSec,
+      progress,
+      remainingSec,
+      ended,
+      bpm: track.bpm,
+      beatFloat,
+      beatIndex,
+      beatPhase,
+      energy,
+      bass,
+    };
   }
 
   /* ===== Synthesized Crystalline Music-Box Sound Effects ===== */

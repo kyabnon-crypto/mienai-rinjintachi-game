@@ -54,6 +54,11 @@
 
       <!-- Main HUD (hidden until start) -->
       <div id="hud" class="hud hidden">
+        <!-- Slim top-edge song progress bar -->
+        <div class="song-progress-track" aria-hidden="true">
+          <div id="song-progress-fill" class="song-progress-fill"></div>
+        </div>
+
         <!-- Top Bar -->
         <header class="hud-top">
           <div class="hud-top-left">
@@ -82,6 +87,10 @@
           </div>
 
           <div class="hud-top-right">
+            <div class="time-pill" title="楽曲の残り時間">
+              <span class="time-dot"></span>
+              <strong id="hud-time-left">1:02</strong>
+            </div>
             <!-- Track selector -->
             <div class="track-switcher" role="group" aria-label="楽曲アレンジ切替">
               <button class="track-btn active" data-track="dreamy" type="button">
@@ -111,7 +120,7 @@
         <div class="hud-center-top">
           <div id="fever-banner" class="fever-banner hidden">
             <span class="fever-title">CRYSTAL RUSH</span>
-            <span id="fever-timer" class="fever-timer">30.0s</span>
+            <span id="fever-timer" class="fever-timer">16.0s</span>
           </div>
           <div id="combo-display" class="combo-display hidden">
             <strong id="combo-count">0</strong>
@@ -208,6 +217,43 @@
                 </button>
                 <button id="btn-return-lobby" class="btn-lobby" type="button">
                   🏠 終了してロビーへ戻る
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- End-of-Song Result Modal -->
+        <div id="result-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="result-modal-title">
+          <div class="modal-card modal-result">
+            <div class="result-body">
+              <div class="result-head">
+                <div>
+                  <p class="pause-eyebrow">NIGHT COMPLETE</p>
+                  <h2 id="result-modal-title">今夜の涙蔵</h2>
+                  <p id="result-track-name" class="result-track">♪ ナミダビン — Dreamy Ver.</p>
+                </div>
+                <div id="result-rank" class="result-rank rank-s">S</div>
+              </div>
+
+              <div class="result-grid">
+                <div class="result-metric"><span>PERFECT</span><strong id="res-perfect">0</strong></div>
+                <div class="result-metric"><span>GREAT</span><strong id="res-great">0</strong></div>
+                <div class="result-metric"><span>GOOD</span><strong id="res-good">0</strong></div>
+                <div class="result-metric"><span>MISS</span><strong id="res-miss">0</strong></div>
+                <div class="result-metric"><span>MAX COMBO</span><strong id="res-max-combo">0</strong></div>
+                <div class="result-metric"><span>獲得結晶</span><strong id="res-tears">+0</strong></div>
+              </div>
+
+              <div class="result-actions">
+                <button id="btn-retry" class="btn-primary result-retry-btn" type="button">
+                  ▶ もう1回！（即リトライ）
+                </button>
+                <button id="btn-result-craft" class="btn-secondary" type="button">
+                  ✨ 蔵を育てる
+                </button>
+                <button id="btn-result-lobby" class="btn-lobby" type="button">
+                  🏠 ロビーへ戻る
                 </button>
               </div>
             </div>

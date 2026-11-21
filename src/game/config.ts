@@ -65,8 +65,9 @@ export const TRACKS: Record<TrackId, TrackDef> = {
     shortLabel: '🌙 Dreamy',
     url: './assets/audio/namidabin_dreamy.mp3',
     bpm: 106.5,
-    spawnEveryBeats: 2,
-    approachBeats: 3,
+    durationSec: 62,
+    spawnEveryBeats: 1.5,
+    approachBeats: 2.0,
     valueMultiplier: 1.0,
     feverStartOffsetSec: 0,
     unlockMusicboxLevel: 0,
@@ -77,8 +78,9 @@ export const TRACKS: Record<TrackId, TrackDef> = {
     shortLabel: '✨ 通常版',
     url: './assets/audio/namidabin_normal.mp3',
     bpm: 108.5,
-    spawnEveryBeats: 1,
-    approachBeats: 2.5,
+    durationSec: 62,
+    spawnEveryBeats: 1.0,
+    approachBeats: 1.75,
     valueMultiplier: 1.35,
     feverStartOffsetSec: 0,
     unlockMusicboxLevel: 1,
@@ -89,10 +91,11 @@ export const TRACKS: Record<TrackId, TrackDef> = {
     shortLabel: '🔥 Remix',
     url: './assets/audio/namidabin_remix.mp3',
     bpm: 108.5,
+    durationSec: 62,
     spawnEveryBeats: 0.5,
-    approachBeats: 2,
+    approachBeats: 1.5,
     valueMultiplier: 2.2,
-    feverStartOffsetSec: 46,
+    feverStartOffsetSec: 22,
     unlockMusicboxLevel: 3,
   },
 };
@@ -170,7 +173,7 @@ export const UPGRADES: UpgradeDef[] = [
     baseCostGems: 2,
     costScale: 2.0,
     effectText: (lv) => {
-      const dur = 24 + lv * 4;
+      const dur = 16 + lv * 2;
       if (lv === 0) return `RUSH ${dur}秒（Lv.1で通常版解放）`;
       if (lv < 3) return `RUSH ${dur}秒 / 通常版解放済（Lv.3でRemix常時解放）`;
       return `RUSH ${dur}秒 / 全3アレンジ常時解放！`;

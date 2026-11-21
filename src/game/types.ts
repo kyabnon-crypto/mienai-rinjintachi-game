@@ -30,11 +30,22 @@ export interface TrackDef {
   shortLabel: string;
   url: string;
   bpm: number;
-  spawnEveryBeats: number; // e.g., 2 = every 2 beats, 1 = every beat, 0.5 = half-beat rush
+  durationSec: number;
+  spawnEveryBeats: number; // e.g., 1.5, 1, 0.5
   approachBeats: number;   // beats from spawn until perfect hit
   valueMultiplier: number;
   feverStartOffsetSec: number;
   unlockMusicboxLevel: number;
+}
+
+export interface SessionStats {
+  perfect: number;
+  great: number;
+  good: number;
+  miss: number;
+  maxCombo: number;
+  tearsEarned: number;
+  gemsEarned: number;
 }
 
 export interface UpgradeDef {

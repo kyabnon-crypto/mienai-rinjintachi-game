@@ -28,7 +28,9 @@ async function bootstrap(): Promise<void> {
 
   let started = false;
   let paused = false;
+  let roundComplete = false;
   let lastBeatFloat = 0;
+  let lastSongTimeSec = 0;
   let lastPolishStep = 0;
   let lastPolishTotal = 4;
   let autoSaveTimer = 0;
@@ -43,8 +45,24 @@ async function bootstrap(): Promise<void> {
     rhythm.resizeFx(width, height);
   };
 
+  const startRound = (trackId: TrackId) => {
+    roundComplete = false;
+    paused = false;
+    rhythm.resetSession(true);
+    ui.showResultModal(false);
+    ui.showPauseModal(false);
+
+    audio.init(trackId);
+    const tickInfo = audio.update(0, false);
+    lastBeatFloat = tickInfo.beatFloat;
+    lastSongTimeSec = tickInfo.songTimeSec;
+    rhythm.resetBeatCursors(tickInfo.beatFloat);
+    ui.updateSongProgress(0, tickInfo.durationSec);
+    ui.updateHUD(trackId);
+  };
+
   const pauseGame = () => {
-    if (!started || paused) return;
+    if (!started || paused || roundComplete) return;
     paused = true;
     rhythm.handlePointerUp();
     audio.pause();
@@ -57,17 +75,29 @@ async function bootstrap(): Promise<void> {
     paused = false;
     ui.showPauseModal(false);
     audio.resume();
-    // Re-ensure landscape in case user exited fullscreen while paused
     void viewport.enterLandscape().then(applyViewportResize);
+  };
+
+  const finishRound = () => {
+    if (roundComplete) return;
+    roundComplete = true;
+    rhythm.handlePointerUp();
+    audio.stopAll();
+    gsm.save();
+    const trackTitle = TRACKS[gsm.state.selectedTrack].title;
+    ui.updateSongProgress(1, 0);
+    ui.showResultModal(true, trackTitle, { ...rhythm.sessionStats });
+    audio.playGemAscendSE();
   };
 
   const returnToLobby = () => {
     if (!started) return;
     started = false;
     paused = false;
+    roundComplete = false;
     gsm.save();
     audio.stopAll();
-    rhythm.resetSession();
+    rhythm.resetSession(false);
     ui.returnToLobby();
     void viewport.exitLandscape().then(applyViewportResize);
   };
@@ -76,17 +106,11 @@ async function bootstrap(): Promise<void> {
     onStart: () => {
       if (started) return;
       started = true;
-      paused = false;
-
-      // Immediately enter auto-landscape (native lock on Android, CSS rotation fallback on iOS)
       void viewport.enterLandscape().then(applyViewportResize);
       applyViewportResize();
 
       ui.enterGame();
-      audio.init(gsm.state.selectedTrack);
-      const tickInfo = audio.update(0);
-      rhythm.resetBeatCursors(tickInfo.beatFloat);
-      ui.updateHUD(audio.currentTrackId);
+      startRound(gsm.state.selectedTrack);
 
       if (gsm.offlineEarnedTears > 0 && !shownOfflineToast) {
         shownOfflineToast = true;
@@ -96,8 +120,13 @@ async function bootstrap(): Promise<void> {
           'blue'
         );
       } else {
-        ui.showToast('涙蔵へようこそ', '光る輪が重なる瞬間にタップ＆スワイプ！', 'blue');
+        ui.showToast('涙蔵へようこそ', '1分間のリズム採集！消える前にタップ＆スワイプ', 'blue');
       }
+    },
+
+    onRetry: () => {
+      if (!started) return;
+      startRound(gsm.state.selectedTrack);
     },
 
     onPause: () => pauseGame(),
@@ -121,9 +150,13 @@ async function bootstrap(): Promise<void> {
       }
       gsm.state.selectedTrack = trackId;
       gsm.save();
-      await audio.switchTrack(trackId, undefined, 0.75);
-      const info = audio.update(0);
+      roundComplete = false;
+      ui.showResultModal(false);
+      rhythm.resetSession(true);
+      await audio.switchTrack(trackId, 0, 0.55, false);
+      const info = audio.update(0, false);
       rhythm.resetBeatCursors(info.beatFloat);
+      ui.updateSongProgress(0, info.durationSec);
       ui.updateHUD(trackId);
       ui.showToast('楽曲を切り替えました', TRACKS[trackId].title, 'blue');
     },
@@ -144,13 +177,13 @@ async function bootstrap(): Promise<void> {
     },
 
     onClickPolish: () => {
-      if (!started || paused) return;
+      if (!started || paused || roundComplete) return;
       rhythm.startPolish(lastBeatFloat);
     },
 
     onClickFever: () => {
-      if (!started || paused) return;
-      void rhythm.activateFever(lastBeatFloat);
+      if (!started || paused || roundComplete) return;
+      void rhythm.activateFever(lastSongTimeSec);
       ui.updateHUD('remix');
       ui.showToast('🔥 CRYSTAL RUSH 発動！', 'Digital Math Punk Remix — 宝石＆結晶 2倍！', 'gold');
     },
@@ -176,11 +209,8 @@ async function bootstrap(): Promise<void> {
     onResetSave: () => {
       gsm.reset();
       vault.syncUpgrades(gsm.state);
-      rhythm.combo = 0;
-      rhythm.feverGauge = 0;
+      rhythm.resetSession(false);
       prevUnlockedStories = 0;
-      ui.updateCombo(0, 1);
-      ui.updateFever(false, 0, 0);
       ui.updateHUD(audio.currentTrackId);
       ui.showToast('セーブデータを初期化しました', '新しい夜がはじまります', 'blue');
     },
@@ -231,7 +261,6 @@ async function bootstrap(): Promise<void> {
 
   applyViewportResize();
 
-  // Load real Namidabin .glb model asynchronously while scene is already alive
   actor
     .load('./assets/models/namidabin.glb')
     .then(() => ui.setModelReady(true))
@@ -240,9 +269,8 @@ async function bootstrap(): Promise<void> {
       ui.setModelReady(true, '涙蔵の準備が整いました（軽量モード）');
     });
 
-  // Pointer & touch interaction on the 3D canvas (mapped through virtual landscape viewport)
   const onPointerDown = (e: PointerEvent) => {
-    if (!started || paused) return;
+    if (!started || paused || roundComplete) return;
     audio.unlockOnGesture();
     const { width, height } = viewport.getSize();
     const pt = viewport.clientToVirtual(e.clientX, e.clientY);
@@ -259,8 +287,8 @@ async function bootstrap(): Promise<void> {
     const nx = (pt.x / width) * 2 - 1;
     const ny = -((pt.y / height) * 2 - 1);
     vault.setPointerNdc(nx, ny);
-    if (started) {
-      rhythm.handlePointerMove(pt.x, pt.y, lastBeatFloat);
+    if (started && !roundComplete) {
+      rhythm.handlePointerMove(pt.x, pt.y);
     }
   };
 
@@ -273,41 +301,38 @@ async function bootstrap(): Promise<void> {
   window.addEventListener('pointerup', onPointerUp);
   window.addEventListener('pointercancel', onPointerUp);
 
-  // Also allow tapping anywhere on the polish overlay itself during polishing
   document.getElementById('polish-prompt')!.addEventListener('pointerdown', (e) => {
     e.stopPropagation();
-    if (started && !paused && rhythm.isPolishing) {
+    if (started && !paused && !roundComplete && rhythm.isPolishing) {
       rhythm.tapPolish(lastBeatFloat);
     }
   });
 
-  // Keyboard shortcuts (Space/Z/X/J/K = rhythm snap, F = fever, Esc/P = pause toggle)
   window.addEventListener('keydown', (e) => {
     if (!started || e.repeat) return;
     if (e.code === 'Escape' || e.code === 'KeyP') {
+      if (roundComplete) return;
       e.preventDefault();
       if (paused) resumeGame();
       else pauseGame();
       return;
     }
-    if (paused) return;
+    if (paused || roundComplete) return;
     if (['Space', 'KeyZ', 'KeyX', 'KeyJ', 'KeyK'].includes(e.code)) {
       e.preventDefault();
       rhythm.handleKeySnap(lastBeatFloat);
     } else if (e.code === 'KeyF' && rhythm.feverGauge >= 100 && !rhythm.isFever) {
-      void rhythm.activateFever(lastBeatFloat);
+      void rhythm.activateFever(lastSongTimeSec);
       ui.updateHUD('remix');
     }
   });
 
-  // Auto-pause when switching apps or locking smartphone
   document.addEventListener('visibilitychange', () => {
-    if (document.hidden && started && !paused) {
+    if (document.hidden && started && !paused && !roundComplete) {
       pauseGame();
     }
   });
 
-  // Resize & orientation handlers
   window.addEventListener('resize', applyViewportResize);
   window.addEventListener('orientationchange', () => {
     setTimeout(applyViewportResize, 120);
@@ -316,7 +341,6 @@ async function bootstrap(): Promise<void> {
     setTimeout(applyViewportResize, 80);
   });
 
-  // Main 60fps animation loop
   let prevTime = performance.now();
   let elapsed = 0;
 
@@ -326,17 +350,21 @@ async function bootstrap(): Promise<void> {
     prevTime = now;
 
     if (paused) {
-      // Keep rendering the static paused 3D frame cleanly without advancing time
       vault.renderer.render(vault.scene, vault.camera);
       return;
     }
 
     elapsed += dt;
-    const beatInfo = audio.update(dt, false);
+    const beatInfo = audio.update(dt, roundComplete);
     lastBeatFloat = beatInfo.beatFloat;
+    lastSongTimeSec = beatInfo.songTimeSec;
 
-    if (started) {
+    if (started && !roundComplete) {
       ui.updateBeatDots(beatInfo.beatIndex);
+      if (!rhythm.isFever) {
+        ui.updateSongProgress(beatInfo.progress, beatInfo.remainingSec);
+      }
+
       if (rhythm.isPolishing) {
         ui.updatePolishPrompt(
           true,
@@ -351,9 +379,14 @@ async function bootstrap(): Promise<void> {
         autoSaveTimer = 0;
         gsm.save();
       }
+
+      // Finish 62s round cleanly once song ends (never interrupting Fever or Polishing)
+      if (beatInfo.ended && !rhythm.isFever && !rhythm.isPolishing) {
+        finishRound();
+      }
     }
 
-    rhythm.update(dt, beatInfo.beatFloat, started);
+    rhythm.update(dt, beatInfo.beatFloat, beatInfo.remainingSec, started && !roundComplete);
     actor.update(dt, beatInfo.beatPhase, rhythm.isFever);
     vault.update(elapsed, dt, beatInfo.beatPhase, beatInfo.energy, rhythm.isFever);
   }
