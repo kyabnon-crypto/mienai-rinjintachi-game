@@ -7,7 +7,7 @@
     <link rel="manifest" href="./manifest.json" />
     <meta
       name="description"
-      content="見えない隣人たち — 常世町の隣人たちと音楽・3D空間で遊ぶプレイアブルゲームコレクション（カゲミチ・ナミダビン）"
+      content="見えない隣人たち — 常世町の隣人たちと音楽・3D空間で遊ぶプレイアブルゲームコレクション（ススノミ・カゲミチ・ナミダビン）"
     />
     <title>見えない隣人たち — 常世町プレイアブル作品集</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -31,11 +31,31 @@
       </header>
 
       <section class="games-grid" aria-label="プレイ可能な作品">
+        <!-- 01. Susunomi -->
+        <article class="game-card card-susunomi">
+          <div class="card-visual">
+            <img src="./assets/images/susunomi_main.jpg" alt="ススノミ — 換気口の奥の料理人" />
+            <span class="episode-tag">第一話 ・ NEW</span>
+          </div>
+          <div class="card-body">
+            <p class="card-genre">3D 換気口キッチン・香りキャッチ＆記憶調理</p>
+            <h2 class="card-title">記憶の香り鍋</h2>
+            <p class="card-char">換気口の奥の料理人 ススノミ</p>
+            <p class="card-desc">
+              換気口の奥の小さな台所で、焼き魚・カレー・パンの光の匂いを銅鍋で受け止め、木べらでことこと「記憶の味」を煮込むクッキングアクション。
+            </p>
+            <div class="card-progress" id="prog-susunomi">初回の仕込みを待っています</div>
+            <a class="play-link play-susunomi" href="./susunomi.html">
+              換気口の台所へ入る →
+            </a>
+          </div>
+        </article>
+
         <!-- 02. Kagemichi -->
         <article class="game-card card-kagemichi">
           <div class="card-visual">
             <img src="./assets/images/kagemichi_main.jpg" alt="カゲミチ — 電車の終点に立つ案内人" />
-            <span class="episode-tag">第二話 ・ NEW</span>
+            <span class="episode-tag">第二話</span>
           </div>
           <div class="card-body">
             <p class="card-genre">3D 夜行ホーム・ランタンランナー</p>
@@ -75,7 +95,7 @@
       <section class="neighbors-strip" aria-label="常世町の隣人たち">
         <p class="strip-label">常世町の13人の隣人たち</p>
         <div class="neighbor-chips">
-          <span class="chip">01 ススノミ</span>
+          <a class="chip playable" href="./susunomi.html">01 ススノミ</a>
           <a class="chip playable" href="./kagemichi.html">02 カゲミチ</a>
           <span class="chip">03 トキツギ</span>
           <span class="chip">04 ワスレダマ</span>

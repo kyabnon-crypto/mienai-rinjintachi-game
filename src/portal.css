@@ -37,7 +37,7 @@ body {
 .portal-shell {
   position: relative;
   z-index: 1;
-  max-width: 1040px;
+  max-width: 1140px;
   margin: 0 auto;
   padding: max(40px, env(safe-area-inset-top)) 20px max(48px, env(safe-area-inset-bottom));
 }
@@ -71,8 +71,8 @@ body {
 
 .games-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(310px, 1fr));
-  gap: 24px;
+  grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+  gap: 22px;
 }
 
 .game-card {
@@ -90,6 +90,10 @@ body {
 .game-card:hover {
   transform: translateY(-4px);
   box-shadow: 0 26px 60px rgba(0, 0, 0, 0.58);
+}
+
+.card-susunomi:hover {
+  border-color: rgba(255, 168, 92, 0.52);
 }
 
 .card-kagemichi:hover {
@@ -124,6 +128,10 @@ body {
   transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
+.card-susunomi .card-visual img {
+  object-position: center 42%;
+}
+
 .card-kagemichi .card-visual img {
   object-position: center 64%;
 }
@@ -149,6 +157,11 @@ body {
   background: rgba(10, 14, 28, 0.78);
   border: 1px solid rgba(255, 255, 255, 0.2);
   color: #fff3da;
+}
+
+.card-susunomi .episode-tag {
+  color: #ffb066;
+  border-color: rgba(255, 168, 92, 0.5);
 }
 
 .card-kagemichi .episode-tag {
@@ -186,6 +199,10 @@ body {
   margin-top: 3px;
   font-size: 13px;
   font-weight: 700;
+}
+
+.card-susunomi .card-char {
+  color: #ffb066;
 }
 
 .card-kagemichi .card-char {
@@ -231,6 +248,12 @@ body {
 .play-link:hover {
   transform: translateY(-1px);
   filter: brightness(1.06);
+}
+
+.play-susunomi {
+  background: linear-gradient(135deg, #f3a150, #c25b22);
+  color: #1f0e04;
+  box-shadow: 0 8px 22px rgba(232, 126, 48, 0.36);
 }
 
 .play-kagemichi {

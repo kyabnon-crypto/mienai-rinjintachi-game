@@ -6,7 +6,17 @@
 
 ## 収録タイトル
 
-### 02. 終電のランタン 〜カゲミチ〜（NEW!）
+### 01. 記憶の香り鍋 〜ススノミ〜（NEW!）
+- **ジャンル**：3D 換気口キッチン・香りキャッチ＆記憶調理アクション（[`susunomi.html`](susunomi.html)）
+- **舞台**：古びたアパートの「換気口の奥の小さな台所」
+- **特徴**：
+  - リグ・アニメーション済み `susunomi.glb`（`Walking` / `Running`）＋青いガス火の上で光る銅鍋＆木べらを搭載。
+  - タッチドラッグや矢印キーで銅鍋を動かし、換気口から漂う5色の光の匂い（焼き魚・カレー・焼きたてパン・あたたか出汁・星灯りの記憶）を集めて「今夜の記憶レシピ」を完成させよう。
+  - **木べらかき混ぜ（STIR BURST）**で焦げ煙を浄化＆周囲の匂いを一気に銅鍋へ引き寄せ。
+  - ゲージMAXで **KOTOKOTO FEVER（ことことフィーバー）**発動！朝の光が差し込み、全レーン吸引＆焦げ煙が星灯りへ変化する爽快フィーバー！
+  - 公式3アレンジ（`Dreamy Ver.` / `通常版` / `Instrumental` 各62秒ゲームサイズ）、6種類の台所設備強化（香り瓶棚・レシピ額・マッチ箱ベッド・銅やかん等が3D空間に反映）、物語『第一話：換気口の奥の料理人』全5章を収録。
+
+### 02. 終電のランタン 〜カゲミチ〜
 - **ジャンル**：3D 夜行ホーム・ランタンランナー＆夢送りアクション（[`kagemichi.html`](kagemichi.html)）
 - **舞台**：終電がいってしまったあとの「おわりの駅（終点ホーム＆見えないレール）」
 - **特徴**：
@@ -45,14 +55,16 @@ npm run build
 
 ```text
 ├── index.html                  # 見えない隣人たち ゲーム選択ポータル
+├── susunomi.html               # 01. 記憶の香り鍋 〜ススノミ〜
 ├── kagemichi.html              # 02. 終電のランタン 〜カゲミチ〜
 ├── namidabin.html              # 12. 涙蔵のオルゴール 〜ナミダビン〜
 ├── public/assets/
-│   ├── models/                 # kagemichi.glb / namidabin.glb
-│   ├── audio/                  # カゲミチ・ナミダビン各3バージョン（MP3）
+│   ├── models/                 # susunomi.glb / kagemichi.glb / namidabin.glb
+│   ├── audio/                  # ススノミ・カゲミチ・ナミダビン各3バージョン（MP3）
 │   └── images/                 # ポータル用キャラクターサムネイル
 └── src/
     ├── portal.ts / portal.css  # 常世町ポータル
+    ├── susunomi/               # ススノミ 3D換気口キッチン（scene/actor/system/audio/state/ui）
     ├── kagemichi/              # カゲミチ 3Dランナー（scene/actor/runner/audio/state/ui）
     └── game/                   # ナミダビン 3Dリズム＆箱庭（vault/actor/rhythm/audio/state/ui）
 ```

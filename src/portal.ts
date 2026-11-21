@@ -1,6 +1,26 @@
 import './portal.css';
 
 function renderSaveProgress(): void {
+  const ssEl = document.getElementById('prog-susunomi');
+  if (ssEl) {
+    try {
+      const raw = localStorage.getItem('mienai_susunomi_v1');
+      if (raw) {
+        const st = JSON.parse(raw);
+        const totalLv = Object.values(st.upgrades || {}).reduce(
+          (a: number, b: unknown) => a + (typeof b === 'number' ? b : 0),
+          0
+        );
+        const rank = 1 + Math.floor(totalLv / 2);
+        const stars = Number(st.stars || 0);
+        const dishes = Number(st.totalDishesServed || 0);
+        ssEl.textContent = `換気口の台所 Lv.${rank} ・ 記憶の星 ${stars} ・ 記憶料理 ${dishes}皿`;
+      }
+    } catch {
+      // Ignore parse errors
+    }
+  }
+
   const kgEl = document.getElementById('prog-kagemichi');
   if (kgEl) {
     try {

@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+    />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="theme-color" content="#140d09" />
+    <link rel="manifest" href="./manifest.json" />
+    <meta
+      name="description"
+      content="見えない隣人たち — 換気口の奥の小さな台所で、ススノミとともに光の匂いを銅鍋に集めて「記憶の味」を煮込む3D WebGLクッキングアクション"
+    />
+    <title>記憶の香り鍋 〜ススノミ〜 | 見えない隣人たち</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700&family=Zen+Maru+Gothic:wght@500;700;900&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div id="app">
+      <canvas id="game-canvas" aria-label="記憶の香り鍋 3D換気口キッチン"></canvas>
+      <canvas id="fx-canvas" aria-hidden="true"></canvas>
+      <div id="floating-layer" aria-hidden="true"></div>
+
+      <!-- Title / Lobby overlay -->
+      <section id="title-screen" class="overlay-screen">
+        <div class="title-card">
+          <p class="title-eyebrow">見えない隣人たち — 第一話 プレイアブル</p>
+          <h1 class="title-main">記憶の香り鍋</h1>
+          <p class="title-sub">〜 換気口の奥の料理人 ススノミ 〜</p>
+          <p class="title-lead">
+            古びたアパートの換気口の奥にある、だれも知らない小さな台所。<br />
+            焼き魚・カレー・パン屋の光の匂いを銅鍋で受け止め、ことこと「記憶の味」を届けよう。
+          </p>
+          <button id="btn-start" class="btn-primary" type="button">
+            <span class="btn-glow-dot"></span>
+            換気口の台所へ入る
+          </button>
+          <p class="title-hint">
+            起動時に自動で横画面表示 ・ タッチドラッグ / 矢印キー移動 ・ Spaceで木べらかき混ぜ ・ 音声ON推奨
+          </p>
+          <div id="loading-status" class="loading-status">3Dモデルと楽曲を準備しています…</div>
+          <a href="./index.html" class="portal-back-link">← 見えない隣人たち 一覧へもどる</a>
+        </div>
+      </section>
+
+      <!-- Main HUD -->
+      <div id="hud" class="hud hidden">
+        <div class="song-progress-track" aria-hidden="true">
+          <div id="song-progress-fill" class="song-progress-fill"></div>
+        </div>
+
+        <header class="hud-top">
+          <div class="hud-top-left">
+            <div class="kitchen-badge">
+              <span class="kitchen-rank-label">換気口の台所</span>
+              <strong id="hud-kitchen-rank">Lv.1</strong>
+            </div>
+            <div class="resource-pill" title="集めた香りの雫">
+              <span class="res-icon res-drop"></span>
+              <div class="res-meta">
+                <span class="res-label">香りの雫</span>
+                <strong id="hud-drops">0</strong>
+              </div>
+            </div>
+            <div class="resource-pill" title="記憶の味を届けた証">
+              <span class="res-icon res-star"></span>
+              <div class="res-meta">
+                <span class="res-label">記憶の星</span>
+                <strong id="hud-stars">0</strong>
+              </div>
+            </div>
+            <div class="shield-pill" title="換気扇の守り（焦げ煙ガード）">
+              <span class="shield-label">換気</span>
+              <span id="hud-shields" class="shield-marks">―</span>
+            </div>
+          </div>
+
+          <div class="hud-top-right">
+            <div class="time-pill" title="楽曲の残り時間">
+              <span class="time-dot"></span>
+              <strong id="hud-time-left">1:02</strong>
+            </div>
+            <div class="track-switcher" role="group" aria-label="楽曲バージョン切替">
+              <button class="track-btn active" data-track="dreamy" type="button">
+                🌙 Dreamy
+              </button>
+              <button class="track-btn" data-track="normal" type="button">
+                ✨ 通常版
+              </button>
+              <button class="track-btn" data-track="instrumental" type="button">
+                🎹 Inst
+              </button>
+            </div>
+            <button id="btn-story" class="icon-btn" type="button" title="換気口の記録（物語）">
+              📖 <span id="story-badge" class="notif-dot hidden"></span>
+            </button>
+            <button id="btn-craft" class="icon-btn craft-toggle" type="button" title="台所のしつらえ（設備強化）">
+              🍲 台所を整える <span id="craft-badge" class="notif-dot hidden"></span>
+            </button>
+            <button id="btn-settings" class="icon-btn" type="button" title="設定">⚙</button>
+            <button id="btn-pause" class="icon-btn pause-btn" type="button" title="一時停止（Esc / P）" aria-label="一時停止">
+              ⏸
+            </button>
+          </div>
+        </header>
+
+        <!-- Center Top: Active Memory Recipe Order + Fever Banner + Combo -->
+        <div class="hud-center-top">
+          <div class="recipe-card" aria-label="今夜の記憶レシピ">
+            <div class="recipe-head">
+              <span class="recipe-tag">今夜のレシピ</span>
+              <strong id="recipe-name" class="recipe-name">夕暮れの帰り道スープ</strong>
+            </div>
+            <div id="recipe-slots" class="recipe-slots"></div>
+          </div>
+
+          <div id="fever-banner" class="fever-banner hidden">
+            <span class="fever-title">KOTOKOTO FEVER</span>
+            <span id="fever-timer" class="fever-timer">14.0s</span>
+          </div>
+
+          <div id="combo-display" class="combo-display hidden">
+            <strong id="combo-count">0</strong>
+            <span class="combo-word">COMBO</span>
+            <span id="combo-mult" class="combo-mult">×1.00</span>
+          </div>
+        </div>
+
+        <!-- Subtle Right-side Stir Action Button for effortless mobile landscape play -->
+        <div class="touch-actions" aria-label="調理アクション">
+          <button id="ctrl-stir" class="stir-action-btn ready" type="button" aria-label="木べらでかき混ぜる">
+            <span class="stir-icon">🥄</span>
+            <span class="stir-text">まぜる</span>
+            <span class="stir-sub">焦げ浄化</span>
+            <span class="stir-cd-track"><span id="stir-cd-fill" class="stir-cd-fill"></span></span>
+          </button>
+        </div>
+
+        <footer class="hud-bottom">
+          <!-- Left: Copper Pot Simmer Fill & Serve -->
+          <div class="pot-panel">
+            <div class="pot-visual">
+              <div class="pot-vessel">
+                <div id="pot-fill" class="pot-fill"></div>
+              </div>
+              <span id="pot-pct" class="pot-pct">0%</span>
+            </div>
+            <div class="pot-info">
+              <div class="pot-title-row">
+                <span class="pot-name">ことこと銅鍋</span>
+                <span id="pot-count" class="pot-count">0 / 12</span>
+              </div>
+              <button id="btn-serve-pot" class="btn-serve-pot" type="button" disabled>
+                ことこと煮込み中 (0/12)
+              </button>
+            </div>
+          </div>
+
+          <!-- Center: Beat Pulse & KOTOKOTO FEVER Gauge -->
+          <div class="beat-center-panel">
+            <div class="beat-dots" aria-hidden="true">
+              <span class="beat-dot" data-beat="0"></span>
+              <span class="beat-dot" data-beat="1"></span>
+              <span class="beat-dot" data-beat="2"></span>
+              <span class="beat-dot" data-beat="3"></span>
+            </div>
+            <div class="fever-bar-wrap">
+              <div class="fever-bar-track">
+                <div id="fever-bar-fill" class="fever-bar-fill"></div>
+              </div>
+              <button id="btn-fever" class="btn-fever" type="button" disabled>
+                ことことゲージ 0%
+              </button>
+            </div>
+          </div>
+
+          <!-- Right: Now Playing & Hint -->
+          <div class="quick-hint-panel">
+            <div id="now-playing" class="now-playing">♪ ススノミ — Dreamy Ver.</div>
+            <div class="hint-line">ドラッグ / ←→ で銅鍋移動 ・ 🥄 / Space でかき混ぜ浄化</div>
+          </div>
+        </footer>
+
+        <!-- Right Collapsible Kitchen Upgrade Drawer -->
+        <aside id="craft-drawer" class="side-drawer hidden" aria-label="台所のしつらえ">
+          <div class="drawer-header">
+            <div>
+              <h2>台所のしつらえ</h2>
+              <p>換気口の台所と銅鍋を整えると、より豊かな記憶の味が届きます</p>
+            </div>
+            <button id="btn-close-craft" class="close-btn" type="button" aria-label="閉じる">✕</button>
+          </div>
+          <div id="craft-list" class="craft-list"></div>
+        </aside>
+
+        <!-- Pause Modal -->
+        <div id="pause-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="pause-modal-title">
+          <div class="modal-card modal-pause">
+            <div class="pause-body">
+              <p class="pause-eyebrow">PAUSED</p>
+              <h2 id="pause-modal-title">台所のひとやすみ</h2>
+              <p class="pause-sub">進行状況は自動で保存されています</p>
+              <div class="pause-stats">
+                <div class="pause-stat">
+                  <span>現在のコンボ</span>
+                  <strong id="pause-stat-combo">0</strong>
+                </div>
+                <div class="pause-stat">
+                  <span>香りの雫</span>
+                  <strong id="pause-stat-drops">0</strong>
+                </div>
+                <div class="pause-stat">
+                  <span>記憶の星</span>
+                  <strong id="pause-stat-stars">0</strong>
+                </div>
+              </div>
+              <div class="pause-actions">
+                <button id="btn-resume" class="btn-primary pause-action-primary" type="button">
+                  ▶ 台所へ戻る（再開）
+                </button>
+                <button id="btn-pause-settings" class="btn-secondary" type="button">
+                  ⚙ 音量・タイミング設定
+                </button>
+                <button id="btn-return-lobby" class="btn-lobby" type="button">
+                  🏠 タイトルへ戻る
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Result Modal -->
+        <div id="result-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="result-modal-title">
+          <div class="modal-card modal-result">
+            <div class="result-body">
+              <div class="result-head">
+                <div>
+                  <p class="pause-eyebrow">MORNING AROMA DELIVERED</p>
+                  <h2 id="result-modal-title">今夜の料理記録</h2>
+                  <p id="result-track-name" class="result-track">♪ ススノミ — Dreamy Ver.</p>
+                </div>
+                <div id="result-rank" class="result-rank rank-s">S</div>
+              </div>
+
+              <div class="result-grid">
+                <div class="result-metric"><span>集めた匂い</span><strong id="res-caught">0</strong></div>
+                <div class="result-metric"><span>レシピ完成</span><strong id="res-recipes">0</strong></div>
+                <div class="result-metric"><span>MAX COMBO</span><strong id="res-max-combo">0</strong></div>
+                <div class="result-metric"><span>焦げ浄化</span><strong id="res-purified">0</strong></div>
+              </div>
+
+              <div class="result-rewards">
+                <div class="reward-pill">
+                  <span>獲得した香りの雫</span>
+                  <strong id="res-drops">+0</strong>
+                </div>
+                <div class="reward-pill">
+                  <span>獲得した記憶の星</span>
+                  <strong id="res-stars">+0</strong>
+                </div>
+              </div>
+
+              <div class="result-actions">
+                <button id="btn-retry" class="btn-primary result-action-primary" type="button">
+                  🍲 もう一度煮込む
+                </button>
+                <button id="btn-result-craft" class="btn-secondary" type="button">
+                  ✨ 台所を整える
+                </button>
+                <button id="btn-result-lobby" class="btn-lobby" type="button">
+                  🏠 タイトルへ
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Story Modal -->
+        <div id="story-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="story-modal-title">
+          <div class="modal-card modal-story">
+            <div class="modal-header">
+              <div>
+                <h2 id="story-modal-title">換気口の記録 — 第一話『換気口の奥の料理人』</h2>
+                <p>記憶のレシピ帳を整えるか、記憶料理を届けることで物語がひらかれます</p>
+              </div>
+              <button id="btn-close-story" class="close-btn" type="button" aria-label="閉じる">✕</button>
+            </div>
+            <div id="story-list" class="story-list"></div>
+          </div>
+        </div>
+
+        <!-- Settings Modal -->
+        <div id="settings-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="settings-modal-title">
+          <div class="modal-card modal-settings">
+            <div class="modal-header">
+              <h2 id="settings-modal-title">台所の設定</h2>
+              <button id="btn-close-settings" class="close-btn" type="button" aria-label="閉じる">✕</button>
+            </div>
+            <div class="settings-body">
+              <label class="setting-row">
+                <span>BGM 音量</span>
+                <input id="opt-bgm" type="range" min="0" max="100" value="72" />
+                <strong id="opt-bgm-val">72%</strong>
+              </label>
+              <label class="setting-row">
+                <span>効果音 音量</span>
+                <input id="opt-se" type="range" min="0" max="100" value="85" />
+                <strong id="opt-se-val">85%</strong>
+              </label>
+              <label class="setting-row">
+                <span>タイミング補正</span>
+                <input id="opt-offset" type="range" min="-150" max="150" step="5" value="0" />
+                <strong id="opt-offset-val">0ms</strong>
+              </label>
+              <hr class="settings-sep" />
+              <div class="settings-links">
+                <a class="portal-link-btn" href="./index.html">← 見えない隣人たち ポータルへ戻る</a>
+              </div>
+              <div class="settings-danger">
+                <button id="btn-reset-save" class="btn-danger" type="button">
+                  ススノミのセーブデータを初期化する
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Toast notifications -->
+        <div id="toast-container" class="toast-container" aria-live="polite"></div>
+      </div>
+    </div>
+
+    <script type="module" src="/src/susunomi/main.ts"></script>
+  </body>
+</html>
