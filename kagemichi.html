@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+    />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="theme-color" content="#090d1b" />
+    <link rel="manifest" href="./manifest.json" />
+    <meta
+      name="description"
+      content="見えない隣人たち — 終電のあとの『おわりの駅』で、カゲミチとともに帰れなかった想いをランタンに集め、夢行き列車へ届ける3D WebGLランナーゲーム"
+    />
+    <title>終電のランタン 〜カゲミチ〜 | 見えない隣人たち</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700&family=Zen+Maru+Gothic:wght@500;700;900&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div id="app">
+      <canvas id="game-canvas" aria-label="終電のランタン 3Dステージ"></canvas>
+      <canvas id="fx-canvas" aria-hidden="true"></canvas>
+      <div id="floating-layer" aria-hidden="true"></div>
+
+      <!-- Title / Lobby overlay -->
+      <section id="title-screen" class="overlay-screen">
+        <div class="title-card">
+          <p class="title-eyebrow">見えない隣人たち — 第二話 プレイアブル</p>
+          <h1 class="title-main">終電のランタン</h1>
+          <p class="title-sub">〜 電車の終点に立つ案内人 カゲミチ 〜</p>
+          <p class="title-lead">
+            終電がいってしまったあとの「おわりの駅」。<br />
+            ランタンの灯りをたよりに、帰れなかった想いを拾い集めて誰かの夢へ届けよう。
+          </p>
+          <button id="btn-start" class="btn-primary" type="button">
+            <span class="btn-glow-dot"></span>
+            終電のホームへ出る
+          </button>
+          <p class="title-hint">
+            起動時に自動で横画面表示 ・ スワイプ / レーンタップ / 矢印・Spaceキー対応 ・ 音声ON推奨
+          </p>
+          <div id="loading-status" class="loading-status">3Dモデルと楽曲を準備しています…</div>
+          <a href="./index.html" class="portal-back-link">← 見えない隣人たち 一覧へもどる</a>
+        </div>
+      </section>
+
+      <!-- Main HUD -->
+      <div id="hud" class="hud hidden">
+        <div class="song-progress-track" aria-hidden="true">
+          <div id="song-progress-fill" class="song-progress-fill"></div>
+        </div>
+
+        <header class="hud-top">
+          <div class="hud-top-left">
+            <div class="station-badge">
+              <span class="station-rank-label">おわりの駅</span>
+              <strong id="hud-station-rank">Lv.1</strong>
+            </div>
+            <div class="resource-pill" title="集めた想いの灯火">
+              <span class="res-icon res-light"></span>
+              <div class="res-meta">
+                <span class="res-label">想いの灯火</span>
+                <strong id="hud-lights">0</strong>
+              </div>
+            </div>
+            <div class="resource-pill" title="夢へ届けた証の切符">
+              <span class="res-icon res-ticket"></span>
+              <div class="res-meta">
+                <span class="res-label">夢の切符</span>
+                <strong id="hud-tickets">0</strong>
+              </div>
+            </div>
+            <div class="shield-pill" title="街灯の守り（迷い霧ガード）">
+              <span class="shield-label">守り</span>
+              <span id="hud-shields" class="shield-marks">―</span>
+            </div>
+          </div>
+
+          <div class="hud-top-right">
+            <div class="time-pill" title="楽曲の残り時間">
+              <span class="time-dot"></span>
+              <strong id="hud-time-left">1:02</strong>
+            </div>
+            <div class="track-switcher" role="group" aria-label="楽曲バージョン切替">
+              <button class="track-btn active" data-track="dreamy" type="button">
+                🌙 Dreamy
+              </button>
+              <button class="track-btn" data-track="normal" type="button">
+                ✨ 通常版
+              </button>
+              <button class="track-btn" data-track="instrumental" type="button">
+                🎹 Inst
+              </button>
+            </div>
+            <button id="btn-story" class="icon-btn" type="button" title="終点の記録（物語）">
+              📖 <span id="story-badge" class="notif-dot hidden"></span>
+            </button>
+            <button id="btn-craft" class="icon-btn craft-toggle" type="button" title="詰め所のしつらえ（設備強化）">
+              🏮 詰め所を整える <span id="craft-badge" class="notif-dot hidden"></span>
+            </button>
+            <button id="btn-settings" class="icon-btn" type="button" title="設定">⚙</button>
+            <button id="btn-pause" class="icon-btn pause-btn" type="button" title="一時停止（Esc / P）" aria-label="一時停止">
+              ⏸
+            </button>
+          </div>
+        </header>
+
+        <div class="hud-center-top">
+          <div id="express-banner" class="express-banner hidden">
+            <span class="express-title">DREAM EXPRESS</span>
+            <span id="express-timer" class="express-timer">14.0s</span>
+          </div>
+          <div id="combo-display" class="combo-display hidden">
+            <strong id="combo-count">0</strong>
+            <span class="combo-word">COMBO</span>
+            <span id="combo-mult" class="combo-mult">×1.00</span>
+          </div>
+        </div>
+
+        <!-- Subtle Left/Right/Jump Touch Controls for effortless mobile landscape play -->
+        <div class="touch-controls" aria-label="操作ボタン">
+          <div class="touch-left-group">
+            <button id="ctrl-left" class="ctrl-pad-btn" type="button" aria-label="左レーンへ">◀</button>
+            <button id="ctrl-right" class="ctrl-pad-btn" type="button" aria-label="右レーンへ">▶</button>
+          </div>
+          <div class="touch-right-group">
+            <button id="ctrl-jump" class="ctrl-pad-btn ctrl-jump-btn" type="button" aria-label="ジャンプ">
+              ▲ <span>JUMP</span>
+            </button>
+          </div>
+        </div>
+
+        <footer class="hud-bottom">
+          <!-- Left: Brass Lantern Fill & Dream Send -->
+          <div class="lantern-panel">
+            <div class="lantern-visual">
+              <div class="lantern-glass">
+                <div id="lantern-fill" class="lantern-fill"></div>
+              </div>
+              <span id="lantern-pct" class="lantern-pct">0%</span>
+            </div>
+            <div class="lantern-info">
+              <div class="lantern-title-row">
+                <span class="lantern-name">案内ランタン</span>
+                <span id="lantern-count" class="lantern-count">0 / 12</span>
+              </div>
+              <button id="btn-send-dream" class="btn-send-dream" type="button" disabled>
+                ランタン蓄積中 (0/12)
+              </button>
+            </div>
+          </div>
+
+          <!-- Center: Beat Pulse & DREAM EXPRESS Gauge -->
+          <div class="beat-center-panel">
+            <div class="beat-dots" aria-hidden="true">
+              <span class="beat-dot" data-beat="0"></span>
+              <span class="beat-dot" data-beat="1"></span>
+              <span class="beat-dot" data-beat="2"></span>
+              <span class="beat-dot" data-beat="3"></span>
+            </div>
+            <div class="express-bar-wrap">
+              <div class="express-bar-track">
+                <div id="express-bar-fill" class="express-bar-fill"></div>
+              </div>
+              <button id="btn-express" class="btn-express" type="button" disabled>
+                DREAM EXPRESS 0%
+              </button>
+            </div>
+          </div>
+
+          <!-- Right: Now Playing & Hint -->
+          <div class="quick-hint-panel">
+            <div id="now-playing" class="now-playing">♪ カゲミチ — Dreamy Ver.</div>
+            <div class="hint-line">←→ / スワイプでレーン移動 ・ ▲ / Spaceで遮断バーを跳び越え</div>
+          </div>
+        </footer>
+
+        <!-- Right Collapsible Craft Drawer -->
+        <aside id="craft-drawer" class="side-drawer hidden" aria-label="詰め所のしつらえ">
+          <div class="drawer-header">
+            <div>
+              <h2>詰め所のしつらえ</h2>
+              <p>おわりの駅とランタンを整えると、より多くの想いが夢へ届きます</p>
+            </div>
+            <button id="btn-close-craft" class="close-btn" type="button" aria-label="閉じる">✕</button>
+          </div>
+          <div id="craft-list" class="craft-list"></div>
+        </aside>
+
+        <!-- Pause Modal -->
+        <div id="pause-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="pause-modal-title">
+          <div class="modal-card modal-pause">
+            <div class="pause-body">
+              <p class="pause-eyebrow">PAUSED</p>
+              <h2 id="pause-modal-title">終電のひとやすみ</h2>
+              <p class="pause-sub">進行状況は自動で保存されています</p>
+              <div class="pause-stats">
+                <div class="pause-stat">
+                  <span>現在のコンボ</span>
+                  <strong id="pause-stat-combo">0</strong>
+                </div>
+                <div class="pause-stat">
+                  <span>想いの灯火</span>
+                  <strong id="pause-stat-lights">0</strong>
+                </div>
+                <div class="pause-stat">
+                  <span>夢の切符</span>
+                  <strong id="pause-stat-tickets">0</strong>
+                </div>
+              </div>
+              <div class="pause-actions">
+                <button id="btn-resume" class="btn-primary pause-action-primary" type="button">
+                  ▶ ホームへ戻る（再開）
+                </button>
+                <button id="btn-pause-settings" class="btn-secondary" type="button">
+                  ⚙ 音量・タイミング設定
+                </button>
+                <button id="btn-return-lobby" class="btn-lobby" type="button">
+                  🏠 タイトルへ戻る
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Result Modal -->
+        <div id="result-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="result-modal-title">
+          <div class="modal-card modal-result">
+            <div class="result-body">
+              <div class="result-head">
+                <div>
+                  <p class="pause-eyebrow">LAST TRAIN ARRIVED</p>
+                  <h2 id="result-modal-title">今夜の案内記録</h2>
+                  <p id="result-track-name" class="result-track">♪ カゲミチ — Dreamy Ver.</p>
+                </div>
+                <div id="result-rank" class="result-rank rank-s">S</div>
+              </div>
+
+              <div class="result-grid">
+                <div class="result-metric"><span>拾った想い</span><strong id="res-collected">0</strong></div>
+                <div class="result-metric"><span>ジャンプ回避</span><strong id="res-jumps">0</strong></div>
+                <div class="result-metric"><span>MAX COMBO</span><strong id="res-max-combo">0</strong></div>
+                <div class="result-metric"><span>迷い霧</span><strong id="res-mist">0</strong></div>
+                <div class="result-metric"><span>獲得灯火</span><strong id="res-lights">+0</strong></div>
+                <div class="result-metric"><span>獲得切符</span><strong id="res-tickets">+0</strong></div>
+              </div>
+
+              <div class="result-actions">
+                <button id="btn-retry" class="btn-primary result-retry-btn" type="button">
+                  ▶ もう1回走る！（即リトライ）
+                </button>
+                <button id="btn-result-craft" class="btn-secondary" type="button">
+                  🏮 詰め所を整える
+                </button>
+                <button id="btn-result-lobby" class="btn-lobby" type="button">
+                  🏠 タイトルへ戻る
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Story Modal -->
+        <div id="story-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="story-modal-title">
+          <div class="modal-card">
+            <div class="modal-header">
+              <div>
+                <h2 id="story-modal-title">おわりの駅の案内記録</h2>
+                <p>第二話『電車の終点に立つ案内人』— 帰れなかった想いが夢へ届く物語</p>
+              </div>
+              <button id="btn-close-story" class="close-btn" type="button" aria-label="閉じる">✕</button>
+            </div>
+            <div id="story-list" class="story-list"></div>
+          </div>
+        </div>
+
+        <!-- Settings Modal -->
+        <div id="settings-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="settings-modal-title">
+          <div class="modal-card modal-compact">
+            <div class="modal-header">
+              <h2 id="settings-modal-title">設定・タイミング調整</h2>
+              <button id="btn-close-settings" class="close-btn" type="button" aria-label="閉じる">✕</button>
+            </div>
+            <div class="settings-body">
+              <label class="setting-row">
+                <span>BGM 音量</span>
+                <input id="opt-bgm" type="range" min="0" max="100" value="72" />
+                <strong id="opt-bgm-val">72%</strong>
+              </label>
+              <label class="setting-row">
+                <span>効果音 (SE) 音量</span>
+                <input id="opt-se" type="range" min="0" max="100" value="85" />
+                <strong id="opt-se-val">85%</strong>
+              </label>
+              <label class="setting-row">
+                <span>判定オフセット</span>
+                <input id="opt-offset" type="range" min="-150" max="150" step="5" value="0" />
+                <strong id="opt-offset-val">0ms</strong>
+              </label>
+              <div class="settings-actions">
+                <button id="btn-reset-save" class="btn-danger" type="button">セーブデータを初期化</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="toast-container" class="toast-container" aria-live="polite"></div>
+      </div>
+    </div>
+
+    <script type="module" src="/src/kagemichi/main.ts"></script>
+  </body>
+</html>

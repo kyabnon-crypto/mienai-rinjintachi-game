@@ -1,3 +1,4 @@
+import { resolve } from 'path';
 import { defineConfig } from 'vite';
 
 export default defineConfig({
@@ -9,5 +10,12 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     assetsInlineLimit: 0,
+    rollupOptions: {
+      input: {
+        main: resolve(__dirname, 'index.html'),
+        namidabin: resolve(__dirname, 'namidabin.html'),
+        kagemichi: resolve(__dirname, 'kagemichi.html'),
+      },
+    },
   },
 });

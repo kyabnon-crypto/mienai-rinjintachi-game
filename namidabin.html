@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+    />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="theme-color" content="#070b1c" />
+    <link rel="manifest" href="./manifest.json" />
+    <meta
+      name="description"
+      content="見えない隣人たち — 常世町の地下『涙蔵』で、音楽のリズムに合わせて涙の結晶を集め、宝石へと磨き上げる3D WebGL箱庭オルゴールゲーム"
+    />
+    <title>涙蔵のオルゴール 〜ナミダビン〜 | 見えない隣人たち</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700&family=Zen+Maru+Gothic:wght@500;700;900&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div id="app">
+      <canvas id="game-canvas" aria-label="涙蔵のオルゴール 3Dステージ"></canvas>
+
+      <!-- Floating feedback layer (judgment pops, swipe trail, particle flashes) -->
+      <canvas id="fx-canvas" aria-hidden="true"></canvas>
+      <div id="floating-layer" aria-hidden="true"></div>
+
+      <!-- Title / Lobby overlay -->
+      <section id="title-screen" class="overlay-screen">
+        <div class="title-card">
+          <p class="title-eyebrow">見えない隣人たち — 第十二話 プレイアブル試作</p>
+          <h1 class="title-main">涙蔵のオルゴール</h1>
+          <p class="title-sub">〜 涙瓶職人 ナミダビン 〜</p>
+          <p class="title-lead">
+            常世町の地下に眠る、青い光の蔵。<br />
+            音楽の鼓動に合わせてこぼれた涙を集め、世界でひとつの宝石へ磨き上げよう。
+          </p>
+          <button id="btn-start" class="btn-primary" type="button">
+            <span class="btn-glow-dot"></span>
+            涙蔵の扉をあける
+          </button>
+          <p class="title-hint">
+            起動時に自動で横画面表示 ・ タップ / スワイプ / Spaceキー対応 ・ 音声ON推奨
+          </p>
+          <div id="loading-status" class="loading-status">3Dモデルと楽曲を準備しています…</div>
+          <a href="./index.html" class="portal-back-link" style="display:inline-block;margin-top:12px;font-size:12px;color:rgba(191,226,255,0.78);text-decoration:none;letter-spacing:0.06em;border-bottom:1px solid rgba(191,226,255,0.3);padding-bottom:2px;">← 見えない隣人たち 一覧へもどる</a>
+        </div>
+      </section>
+
+      <!-- Main HUD (hidden until start) -->
+      <div id="hud" class="hud hidden">
+        <!-- Slim top-edge song progress bar -->
+        <div class="song-progress-track" aria-hidden="true">
+          <div id="song-progress-fill" class="song-progress-fill"></div>
+        </div>
+
+        <!-- Top Bar -->
+        <header class="hud-top">
+          <div class="hud-top-left">
+            <div class="vault-badge">
+              <span class="vault-rank-label">涙蔵</span>
+              <strong id="hud-vault-rank">Lv.1</strong>
+            </div>
+            <div class="resource-pill" title="集めた涙の結晶">
+              <span class="res-icon res-tear"></span>
+              <div class="res-meta">
+                <span class="res-label">涙の結晶</span>
+                <strong id="hud-tears">0</strong>
+              </div>
+            </div>
+            <div class="resource-pill" title="昇華した涙の宝石">
+              <span class="res-icon res-gem"></span>
+              <div class="res-meta">
+                <span class="res-label">涙の宝石</span>
+                <strong id="hud-gems">0</strong>
+              </div>
+            </div>
+            <div class="tally-pill" title="カゾエルの正の字（宝石昇華の記録）">
+              <span class="tally-label">正の字</span>
+              <span id="hud-tally" class="tally-marks">―</span>
+            </div>
+          </div>
+
+          <div class="hud-top-right">
+            <div class="time-pill" title="楽曲の残り時間">
+              <span class="time-dot"></span>
+              <strong id="hud-time-left">1:02</strong>
+            </div>
+            <!-- Track selector -->
+            <div class="track-switcher" role="group" aria-label="楽曲バージョン切替">
+              <button class="track-btn active" data-track="dreamy" type="button">
+                🌙 Dreamy
+              </button>
+              <button class="track-btn" data-track="normal" type="button">
+                ✨ 通常版
+              </button>
+              <button class="track-btn" data-track="instrumental" type="button">
+                🎹 Inst
+              </button>
+            </div>
+            <button id="btn-story" class="icon-btn" type="button" title="記憶のラベル帳">
+              📖 <span id="story-badge" class="notif-dot hidden"></span>
+            </button>
+            <button id="btn-craft" class="icon-btn craft-toggle" type="button" title="蔵のしつらえ（設備強化）">
+              ✨ 蔵を育てる <span id="craft-badge" class="notif-dot hidden"></span>
+            </button>
+            <button id="btn-settings" class="icon-btn" type="button" title="設定">⚙</button>
+            <button id="btn-pause" class="icon-btn pause-btn" type="button" title="一時停止（Esc / P）" aria-label="一時停止">
+              ⏸
+            </button>
+          </div>
+        </header>
+
+        <!-- Center-Top Fever Banner & Combo -->
+        <div class="hud-center-top">
+          <div id="fever-banner" class="fever-banner hidden">
+            <span class="fever-title">CRYSTAL RUSH</span>
+            <span id="fever-timer" class="fever-timer">16.0s</span>
+          </div>
+          <div id="combo-display" class="combo-display hidden">
+            <strong id="combo-count">0</strong>
+            <span class="combo-word">COMBO</span>
+            <span id="combo-mult" class="combo-mult">×1.0</span>
+          </div>
+        </div>
+
+        <!-- Bottom Bar -->
+        <footer class="hud-bottom">
+          <!-- Left: Collection Bottle & Polish trigger -->
+          <div class="bottle-panel">
+            <div class="bottle-visual">
+              <div class="bottle-glass">
+                <div id="bottle-fill" class="bottle-fill"></div>
+              </div>
+              <span id="bottle-pct" class="bottle-pct">0%</span>
+            </div>
+            <div class="bottle-info">
+              <div class="bottle-title-row">
+                <span class="bottle-name">採集瓶</span>
+                <span id="bottle-count" class="bottle-count">0 / 10</span>
+              </div>
+              <button id="btn-polish" class="btn-polish" type="button" disabled>
+                台座で磨く（満タンで解放）
+              </button>
+            </div>
+          </div>
+
+          <!-- Center: Beat Pulse & Fever Gauge -->
+          <div class="beat-center-panel">
+            <div class="beat-dots" aria-hidden="true">
+              <span class="beat-dot" data-beat="0"></span>
+              <span class="beat-dot" data-beat="1"></span>
+              <span class="beat-dot" data-beat="2"></span>
+              <span class="beat-dot" data-beat="3"></span>
+            </div>
+            <div class="fever-bar-wrap">
+              <div class="fever-bar-track">
+                <div id="fever-bar-fill" class="fever-bar-fill"></div>
+              </div>
+              <button id="btn-fever" class="btn-fever" type="button" disabled>
+                CRYSTAL RUSH 0%
+              </button>
+            </div>
+          </div>
+
+          <!-- Right: Quick Legend / Camera Hint -->
+          <div class="quick-hint-panel">
+            <div id="now-playing" class="now-playing">♪ ナミダビン (Dreamy Ver.)</div>
+            <div class="hint-line">光る輪が重なる瞬間にタップ / なぞって連鎖キャッチ</div>
+          </div>
+        </footer>
+
+        <!-- Right Collapsible Craft Drawer -->
+        <aside id="craft-drawer" class="side-drawer hidden" aria-label="蔵のしつらえ">
+          <div class="drawer-header">
+            <div>
+              <h2>蔵のしつらえ</h2>
+              <p>設備を整えると涙蔵が輝き、採集効率が上がります</p>
+            </div>
+            <button id="btn-close-craft" class="close-btn" type="button" aria-label="閉じる">✕</button>
+          </div>
+          <div id="craft-list" class="craft-list"></div>
+        </aside>
+
+        <!-- Pause Modal -->
+        <div id="pause-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="pause-modal-title">
+          <div class="modal-card modal-pause">
+            <div class="pause-body">
+              <p class="pause-eyebrow">PAUSED</p>
+              <h2 id="pause-modal-title">ひとやすみ</h2>
+              <p class="pause-sub">進行状況は自動で保存されています</p>
+              <div class="pause-stats">
+                <div class="pause-stat">
+                  <span>現在のコンボ</span>
+                  <strong id="pause-stat-combo">0</strong>
+                </div>
+                <div class="pause-stat">
+                  <span>涙の結晶</span>
+                  <strong id="pause-stat-tears">0</strong>
+                </div>
+                <div class="pause-stat">
+                  <span>涙の宝石</span>
+                  <strong id="pause-stat-gems">0</strong>
+                </div>
+              </div>
+              <div class="pause-actions">
+                <button id="btn-resume" class="btn-primary pause-action-primary" type="button">
+                  ▶ ゲームを再開する
+                </button>
+                <button id="btn-pause-settings" class="btn-secondary" type="button">
+                  ⚙ 音量・タイミング設定
+                </button>
+                <button id="btn-return-lobby" class="btn-lobby" type="button">
+                  🏠 終了してロビーへ戻る
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- End-of-Song Result Modal -->
+        <div id="result-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="result-modal-title">
+          <div class="modal-card modal-result">
+            <div class="result-body">
+              <div class="result-head">
+                <div>
+                  <p class="pause-eyebrow">NIGHT COMPLETE</p>
+                  <h2 id="result-modal-title">今夜の涙蔵</h2>
+                  <p id="result-track-name" class="result-track">♪ ナミダビン — Dreamy Ver.</p>
+                </div>
+                <div id="result-rank" class="result-rank rank-s">S</div>
+              </div>
+
+              <div class="result-grid">
+                <div class="result-metric"><span>PERFECT</span><strong id="res-perfect">0</strong></div>
+                <div class="result-metric"><span>GREAT</span><strong id="res-great">0</strong></div>
+                <div class="result-metric"><span>GOOD</span><strong id="res-good">0</strong></div>
+                <div class="result-metric"><span>MISS</span><strong id="res-miss">0</strong></div>
+                <div class="result-metric"><span>MAX COMBO</span><strong id="res-max-combo">0</strong></div>
+                <div class="result-metric"><span>獲得結晶</span><strong id="res-tears">+0</strong></div>
+              </div>
+
+              <div class="result-actions">
+                <button id="btn-retry" class="btn-primary result-retry-btn" type="button">
+                  ▶ もう1回！（即リトライ）
+                </button>
+                <button id="btn-result-craft" class="btn-secondary" type="button">
+                  ✨ 蔵を育てる
+                </button>
+                <button id="btn-result-lobby" class="btn-lobby" type="button">
+                  🏠 ロビーへ戻る
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Story / Memory Modal -->
+        <div id="story-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="story-modal-title">
+          <div class="modal-card">
+            <div class="modal-header">
+              <div>
+                <h2 id="story-modal-title">ラベルとインクの記憶帳</h2>
+                <p>ナミダビンが大切に集めた、ある少女の一年間の記録</p>
+              </div>
+              <button id="btn-close-story" class="close-btn" type="button" aria-label="閉じる">✕</button>
+            </div>
+            <div id="story-list" class="story-list"></div>
+          </div>
+        </div>
+
+        <!-- Settings Modal -->
+        <div id="settings-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="settings-modal-title">
+          <div class="modal-card modal-compact">
+            <div class="modal-header">
+              <h2 id="settings-modal-title">設定・タイミング調整</h2>
+              <button id="btn-close-settings" class="close-btn" type="button" aria-label="閉じる">✕</button>
+            </div>
+            <div class="settings-body">
+              <label class="setting-row">
+                <span>BGM 音量</span>
+                <input id="opt-bgm" type="range" min="0" max="100" value="72" />
+                <strong id="opt-bgm-val">72%</strong>
+              </label>
+              <label class="setting-row">
+                <span>効果音 (SE) 音量</span>
+                <input id="opt-se" type="range" min="0" max="100" value="85" />
+                <strong id="opt-se-val">85%</strong>
+              </label>
+              <label class="setting-row">
+                <span>判定オフセット</span>
+                <input id="opt-offset" type="range" min="-150" max="150" step="5" value="0" />
+                <strong id="opt-offset-val">0ms</strong>
+              </label>
+              <div class="settings-actions">
+                <button id="btn-reset-save" class="btn-danger" type="button">セーブデータを初期化</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Polish Rhythm Overlay (appears gently over center pedestal when polishing!) -->
+        <div id="polish-prompt" class="polish-prompt hidden">
+          <div class="polish-ring-wrap">
+            <div id="polish-ring-outer" class="polish-ring-outer"></div>
+            <div class="polish-ring-core">
+              <span id="polish-step-text">磨く 1 / 4</span>
+            </div>
+          </div>
+          <p class="polish-sub">ビートに合わせて画面をタップ（または Space）！</p>
+        </div>
+
+        <!-- Toast notifications (offline cart earnings, story unlock, gem ascension) -->
+        <div id="toast-container" class="toast-container" aria-live="polite"></div>
+      </div>
+    </div>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
