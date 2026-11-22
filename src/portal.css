@@ -92,6 +92,10 @@ body {
   box-shadow: 0 26px 60px rgba(0, 0, 0, 0.58);
 }
 
+.card-tokitsugi:hover {
+  border-color: rgba(246, 204, 116, 0.56);
+}
+
 .card-susunomi:hover {
   border-color: rgba(255, 168, 92, 0.52);
 }
@@ -128,6 +132,10 @@ body {
   transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
+.card-tokitsugi .card-visual img {
+  object-position: center 34%;
+}
+
 .card-susunomi .card-visual img {
   object-position: center 42%;
 }
@@ -157,6 +165,11 @@ body {
   background: rgba(10, 14, 28, 0.78);
   border: 1px solid rgba(255, 255, 255, 0.2);
   color: #fff3da;
+}
+
+.card-tokitsugi .episode-tag {
+  color: #f6cc74;
+  border-color: rgba(246, 204, 116, 0.55);
 }
 
 .card-susunomi .episode-tag {
@@ -199,6 +212,10 @@ body {
   margin-top: 3px;
   font-size: 13px;
   font-weight: 700;
+}
+
+.card-tokitsugi .card-char {
+  color: #f6cc74;
 }
 
 .card-susunomi .card-char {
@@ -248,6 +265,12 @@ body {
 .play-link:hover {
   transform: translateY(-1px);
   filter: brightness(1.06);
+}
+
+.play-tokitsugi {
+  background: linear-gradient(135deg, #f6cc74, #c98c2e);
+  color: #1a1106;
+  box-shadow: 0 8px 22px rgba(232, 174, 72, 0.36);
 }
 
 .play-susunomi {

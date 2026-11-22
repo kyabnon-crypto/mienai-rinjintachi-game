@@ -14,6 +14,7 @@ export default defineConfig({
       input: {
         main: resolve(__dirname, 'index.html'),
         susunomi: resolve(__dirname, 'susunomi.html'),
+        tokitsugi: resolve(__dirname, 'tokitsugi.html'),
         namidabin: resolve(__dirname, 'namidabin.html'),
         kagemichi: resolve(__dirname, 'kagemichi.html'),
       },

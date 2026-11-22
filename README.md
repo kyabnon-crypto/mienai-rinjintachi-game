@@ -6,7 +6,17 @@
 
 ## 収録タイトル
 
-### 01. 記憶の香り鍋 〜ススノミ〜（NEW!）
+### 03. 時繋ぎの懐中時計 〜トキツギ〜（NEW!）
+- **ジャンル**：3D 押し入れ時計工房・懐中時計リズム修繕＆金の糸つなぎ（[`tokitsugi.html`](tokitsugi.html)）
+- **舞台**：どの家の押し入れの奥にもある「わずかな隙間の時計工房」
+- **特徴**：
+  - リグ・アニメーション済み `tokitsugi.glb`（`Walking` / `Running`）＋作業台の中央に広がる巨大な3D真鍮懐中時計＆噛み合う5枚の歯車を搭載。
+  - 楽曲のビートに同期して回る「光の針」に合わせてタップ / Space（または欠片を直接タップ）すると、トキツギの手元から3D空間に「金色の糸」が伸びて5種類の時間の欠片（思い出写真・言葉の欠片・金の歯車・月夜の約束・再会の星砂）を縫い繋ぎ、「今夜の壊れた時間」を修繕。
+  - 2つの欠片を結ぶ**すれ違いペア（TIME LINK）**や、針を逆回転させて文字盤上の「時のほころび」を一斉浄化する**巻き戻し（REWIND STITCH）**を搭載。
+  - ゲージMAXで **GOLDEN HOUR（黄金の刻）**発動！押し入れの隙間から黄金の光が満ち、全ほころびが再会の星砂へ変化＆2倍スコアの爽快フィーバー！
+  - 公式3アレンジ（`Dreamy Ver.` / `通常版` / `Instrumental` 各62秒ゲームサイズ）、6種類の工房設備強化（修復キット・振り子柱時計・金糸ボビン・思い出の瓶棚・真鍮砂時計・写真立てが3D空間に反映）、物語『第三話：押し入れの奥の時間職人』全5章を収録。
+
+### 01. 記憶の香り鍋 〜ススノミ〜
 - **ジャンル**：3D 換気口キッチン・香りキャッチ＆記憶調理アクション（[`susunomi.html`](susunomi.html)）
 - **舞台**：古びたアパートの「換気口の奥の小さな台所」
 - **特徴**：
@@ -55,15 +65,17 @@ npm run build
 
 ```text
 ├── index.html                  # 見えない隣人たち ゲーム選択ポータル
+├── tokitsugi.html              # 03. 時繋ぎの懐中時計 〜トキツギ〜
 ├── susunomi.html               # 01. 記憶の香り鍋 〜ススノミ〜
 ├── kagemichi.html              # 02. 終電のランタン 〜カゲミチ〜
 ├── namidabin.html              # 12. 涙蔵のオルゴール 〜ナミダビン〜
 ├── public/assets/
-│   ├── models/                 # susunomi.glb / kagemichi.glb / namidabin.glb
-│   ├── audio/                  # ススノミ・カゲミチ・ナミダビン各3バージョン（MP3）
+│   ├── models/                 # tokitsugi.glb / susunomi.glb / kagemichi.glb / namidabin.glb
+│   ├── audio/                  # 各キャラクター公式3バージョン（MP3）
 │   └── images/                 # ポータル用キャラクターサムネイル
 └── src/
     ├── portal.ts / portal.css  # 常世町ポータル
+    ├── tokitsugi/              # トキツギ 3D押し入れ時計工房（scene/actor/system/audio/state/ui）
     ├── susunomi/               # ススノミ 3D換気口キッチン（scene/actor/system/audio/state/ui）
     ├── kagemichi/              # カゲミチ 3Dランナー（scene/actor/runner/audio/state/ui）
     └── game/                   # ナミダビン 3Dリズム＆箱庭（vault/actor/rhythm/audio/state/ui）

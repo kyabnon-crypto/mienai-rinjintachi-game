@@ -1,6 +1,26 @@
 import './portal.css';
 
 function renderSaveProgress(): void {
+  const tkEl = document.getElementById('prog-tokitsugi');
+  if (tkEl) {
+    try {
+      const raw = localStorage.getItem('mienai_tokitsugi_v1');
+      if (raw) {
+        const st = JSON.parse(raw);
+        const totalLv = Object.values(st.upgrades || {}).reduce(
+          (a: number, b: unknown) => a + (typeof b === 'number' ? b : 0),
+          0
+        );
+        const rank = 1 + Math.floor(totalLv / 2);
+        const miracles = Number(st.miracles || 0);
+        const mended = Number(st.totalWatchesMended || 0);
+        tkEl.textContent = `時計工房 Lv.${rank} ・ 小さな奇跡 ${miracles} ・ 修繕 ${mended}個`;
+      }
+    } catch {
+      // Ignore parse errors
+    }
+  }
+
   const ssEl = document.getElementById('prog-susunomi');
   if (ssEl) {
     try {

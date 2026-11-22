@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+    />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="theme-color" content="#0b0f1c" />
+    <link rel="manifest" href="./manifest.json" />
+    <meta
+      name="description"
+      content="見えない隣人たち — 押し入れの奥の時計工房で、トキツギとともに光の針に合わせて時間の欠片を金色の糸で繋ぎ直す3D WebGL懐中時計リズム修繕アクション"
+    />
+    <title>時繋ぎの懐中時計 〜トキツギ〜 | 見えない隣人たち</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700&family=Zen+Maru+Gothic:wght@500;700;900&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div id="app">
+      <canvas id="game-canvas" aria-label="時繋ぎの懐中時計 3D押し入れ時計工房"></canvas>
+      <canvas id="fx-canvas" aria-hidden="true"></canvas>
+      <div id="floating-layer" aria-hidden="true"></div>
+
+      <!-- Title / Lobby overlay -->
+      <section id="title-screen" class="overlay-screen">
+        <div class="title-card">
+          <p class="title-eyebrow">見えない隣人たち — 第三話 プレイアブル</p>
+          <h1 class="title-main">時繋ぎの懐中時計</h1>
+          <p class="title-sub">〜 押し入れの奥の時間職人 トキツギ 〜</p>
+          <p class="title-lead">
+            どの家の押し入れの奥にもある、ほんのわずかな「隙間」の時計工房。<br />
+            回る光の針に合わせて時間の欠片を金色の糸で縫い直し、壊れた時間をそっと動かそう。
+          </p>
+          <button id="btn-start" class="btn-primary" type="button">
+            <span class="btn-glow-dot"></span>
+            押し入れの隙間をのぞく
+          </button>
+          <p class="title-hint">
+            起動時に自動で横画面表示 ・ タップ / Space で針合わせ縫い ・ 欠片直接タップ対応 ・ 音声ON推奨
+          </p>
+          <div id="loading-status" class="loading-status">3Dモデルと楽曲を準備しています…</div>
+          <a href="./index.html" class="portal-back-link">← 見えない隣人たち 一覧へもどる</a>
+        </div>
+      </section>
+
+      <!-- Main HUD -->
+      <div id="hud" class="hud hidden">
+        <div class="song-progress-track" aria-hidden="true">
+          <div id="song-progress-fill" class="song-progress-fill"></div>
+        </div>
+
+        <header class="hud-top">
+          <div class="hud-top-left">
+            <div class="workshop-badge">
+              <span class="workshop-rank-label">時計工房</span>
+              <strong id="hud-workshop-rank">Lv.1</strong>
+            </div>
+            <div class="resource-pill" title="集めた時の砂">
+              <span class="res-icon res-sand"></span>
+              <div class="res-meta">
+                <span class="res-label">時の砂</span>
+                <strong id="hud-sands">0</strong>
+              </div>
+            </div>
+            <div class="resource-pill" title="壊れた時間を直した奇跡の証">
+              <span class="res-icon res-miracle"></span>
+              <div class="res-meta">
+                <span class="res-label">小さな奇跡</span>
+                <strong id="hud-miracles">0</strong>
+              </div>
+            </div>
+            <div class="shield-pill" title="真鍮の砂時計ガード（時のほころび防御）">
+              <span class="shield-label">砂時計</span>
+              <span id="hud-shields" class="shield-marks">―</span>
+            </div>
+          </div>
+
+          <div class="hud-top-right">
+            <div class="time-pill" title="楽曲の残り時間">
+              <span class="time-dot"></span>
+              <strong id="hud-time-left">1:02</strong>
+            </div>
+            <div class="track-switcher" role="group" aria-label="楽曲バージョン切替">
+              <button class="track-btn active" data-track="dreamy" type="button">
+                🌙 Dreamy
+              </button>
+              <button class="track-btn" data-track="normal" type="button">
+                ✨ 通常版
+              </button>
+              <button class="track-btn" data-track="instrumental" type="button">
+                🎹 Inst
+              </button>
+            </div>
+            <button id="btn-story" class="icon-btn" type="button" title="押し入れの記録（物語）">
+              📖 <span id="story-badge" class="notif-dot hidden"></span>
+            </button>
+            <button id="btn-craft" class="icon-btn craft-toggle" type="button" title="工房のしつらえ（設備強化）">
+              🕰️ 工房を整える <span id="craft-badge" class="notif-dot hidden"></span>
+            </button>
+            <button id="btn-settings" class="icon-btn" type="button" title="設定">⚙</button>
+            <button id="btn-pause" class="icon-btn pause-btn" type="button" title="一時停止（Esc / P）" aria-label="一時停止">
+              ⏸
+            </button>
+          </div>
+        </header>
+
+        <!-- Center Top: Active Broken Time Order + Golden Hour Banner + Combo -->
+        <div class="hud-center-top">
+          <div class="order-card" aria-label="今夜の修繕依頼">
+            <div class="order-head">
+              <span class="order-tag">今夜の壊れた時間</span>
+              <strong id="order-name" class="order-name">落として割れた写真立て</strong>
+            </div>
+            <div id="order-slots" class="order-slots"></div>
+          </div>
+
+          <div id="fever-banner" class="fever-banner hidden">
+            <span class="fever-title">GOLDEN HOUR</span>
+            <span id="fever-timer" class="fever-timer">14.0s</span>
+          </div>
+
+          <div id="combo-display" class="combo-display hidden">
+            <strong id="combo-count">0</strong>
+            <span class="combo-word">COMBO</span>
+            <span id="combo-mult" class="combo-mult">×1.00</span>
+          </div>
+        </div>
+
+        <!-- Right-side Rewind Stitch Action Button -->
+        <div class="touch-actions" aria-label="時間修復アクション">
+          <button id="ctrl-rewind" class="rewind-action-btn ready" type="button" aria-label="時間の糸で巻き戻し浄化">
+            <span class="rewind-icon">🧵</span>
+            <span class="rewind-text">巻き戻し</span>
+            <span class="rewind-sub">ほころび浄化</span>
+            <span class="rewind-cd-track"><span id="rewind-cd-fill" class="rewind-cd-fill"></span></span>
+          </button>
+        </div>
+
+        <footer class="hud-bottom">
+          <!-- Left: Pocket Watch Mainspring Progress & Wind -->
+          <div class="watch-panel">
+            <div class="watch-visual">
+              <div class="watch-dial-mini">
+                <div id="watch-fill" class="watch-fill"></div>
+              </div>
+              <span id="watch-pct" class="watch-pct">0%</span>
+            </div>
+            <div class="watch-info">
+              <div class="watch-title-row">
+                <span class="watch-name">懐中時計のぜんまい</span>
+                <span id="watch-count" class="watch-count">0 / 12</span>
+              </div>
+              <button id="btn-wind-watch" class="btn-wind-watch" type="button" disabled>
+                時を繋いでいます (0/12)
+              </button>
+            </div>
+          </div>
+
+          <!-- Center: Beat Pulse & GOLDEN HOUR Gauge -->
+          <div class="beat-center-panel">
+            <div class="beat-dots" aria-hidden="true">
+              <span class="beat-dot" data-beat="0"></span>
+              <span class="beat-dot" data-beat="1"></span>
+              <span class="beat-dot" data-beat="2"></span>
+              <span class="beat-dot" data-beat="3"></span>
+            </div>
+            <div class="fever-bar-wrap">
+              <div class="fever-bar-track">
+                <div id="fever-bar-fill" class="fever-bar-fill"></div>
+              </div>
+              <button id="btn-fever" class="btn-fever" type="button" disabled>
+                黄金の刻ゲージ 0%
+              </button>
+            </div>
+          </div>
+
+          <!-- Right: Now Playing & Hint -->
+          <div class="quick-hint-panel">
+            <div id="now-playing" class="now-playing">♪ トキツギ — Dreamy Ver.</div>
+            <div class="hint-line">針合わせタップ / Space で金糸縫い ・ 🧵 / Shift で巻き戻し浄化</div>
+          </div>
+        </footer>
+
+        <!-- Right Collapsible Workshop Upgrade Drawer -->
+        <aside id="craft-drawer" class="side-drawer hidden" aria-label="工房のしつらえ">
+          <div class="drawer-header">
+            <div>
+              <h2>工房のしつらえ</h2>
+              <p>押し入れの時計工房と道具を整えると、より確かな奇跡が届きます</p>
+            </div>
+            <button id="btn-close-craft" class="close-btn" type="button" aria-label="閉じる">✕</button>
+          </div>
+          <div id="craft-list" class="craft-list"></div>
+        </aside>
+
+        <!-- Pause Modal -->
+        <div id="pause-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="pause-modal-title">
+          <div class="modal-card modal-pause">
+            <div class="pause-body">
+              <p class="pause-eyebrow">PAUSED</p>
+              <h2 id="pause-modal-title">工房のひとやすみ</h2>
+              <p class="pause-sub">進行状況は自動で保存されています</p>
+              <div class="pause-stats">
+                <div class="pause-stat">
+                  <span>現在のコンボ</span>
+                  <strong id="pause-stat-combo">0</strong>
+                </div>
+                <div class="pause-stat">
+                  <span>時の砂</span>
+                  <strong id="pause-stat-sands">0</strong>
+                </div>
+                <div class="pause-stat">
+                  <span>小さな奇跡</span>
+                  <strong id="pause-stat-miracles">0</strong>
+                </div>
+              </div>
+              <div class="pause-actions">
+                <button id="btn-resume" class="btn-primary pause-action-primary" type="button">
+                  ▶ 工房へ戻る（再開）
+                </button>
+                <button id="btn-pause-settings" class="btn-secondary" type="button">
+                  ⚙ 音量・タイミング設定
+                </button>
+                <button id="btn-return-lobby" class="btn-lobby" type="button">
+                  🏠 タイトルへ戻る
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Result Modal -->
+        <div id="result-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="result-modal-title">
+          <div class="modal-card modal-result">
+            <div class="result-body">
+              <div class="result-head">
+                <div>
+                  <p class="pause-eyebrow">BROKEN TIME MENDED</p>
+                  <h2 id="result-modal-title">今夜の修繕記録</h2>
+                  <p id="result-track-name" class="result-track">♪ トキツギ — Dreamy Ver.</p>
+                </div>
+                <div id="result-rank" class="result-rank rank-s">S</div>
+              </div>
+
+              <div class="result-grid">
+                <div class="result-metric"><span>繋いだ欠片</span><strong id="res-stitched">0</strong></div>
+                <div class="result-metric"><span>PERFECT</span><strong id="res-perfects">0</strong></div>
+                <div class="result-metric"><span>MAX COMBO</span><strong id="res-max-combo">0</strong></div>
+                <div class="result-metric"><span>ほころび浄化</span><strong id="res-purified">0</strong></div>
+              </div>
+
+              <div class="result-rewards">
+                <div class="reward-pill">
+                  <span>獲得した時の砂</span>
+                  <strong id="res-sands">+0</strong>
+                </div>
+                <div class="reward-pill">
+                  <span>届けた小さな奇跡</span>
+                  <strong id="res-miracles">+0</strong>
+                </div>
+              </div>
+
+              <div class="result-actions">
+                <button id="btn-retry" class="btn-primary result-action-primary" type="button">
+                  🕰️ もう一度時を繋ぐ
+                </button>
+                <button id="btn-result-craft" class="btn-secondary" type="button">
+                  ✨ 工房を整える
+                </button>
+                <button id="btn-result-lobby" class="btn-lobby" type="button">
+                  🏠 タイトルへ
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Story Modal -->
+        <div id="story-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="story-modal-title">
+          <div class="modal-card modal-story">
+            <div class="modal-header">
+              <div>
+                <h2 id="story-modal-title">押し入れの記録 — 第三話『押し入れの奥の時間職人』</h2>
+                <p>押し入れの記録帳を整えるか、懐中時計を修繕することで物語がひらかれます</p>
+              </div>
+              <button id="btn-close-story" class="close-btn" type="button" aria-label="閉じる">✕</button>
+            </div>
+            <div id="story-list" class="story-list"></div>
+          </div>
+        </div>
+
+        <!-- Settings Modal -->
+        <div id="settings-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="settings-modal-title">
+          <div class="modal-card modal-settings">
+            <div class="modal-header">
+              <h2 id="settings-modal-title">工房の設定</h2>
+              <button id="btn-close-settings" class="close-btn" type="button" aria-label="閉じる">✕</button>
+            </div>
+            <div class="settings-body">
+              <label class="setting-row">
+                <span>BGM 音量</span>
+                <input id="opt-bgm" type="range" min="0" max="100" value="72" />
+                <strong id="opt-bgm-val">72%</strong>
+              </label>
+              <label class="setting-row">
+                <span>効果音 音量</span>
+                <input id="opt-se" type="range" min="0" max="100" value="85" />
+                <strong id="opt-se-val">85%</strong>
+              </label>
+              <label class="setting-row">
+                <span>タイミング補正</span>
+                <input id="opt-offset" type="range" min="-150" max="150" step="5" value="0" />
+                <strong id="opt-offset-val">0ms</strong>
+              </label>
+              <hr class="settings-sep" />
+              <div class="settings-links">
+                <a class="portal-link-btn" href="./index.html">← 見えない隣人たち ポータルへ戻る</a>
+              </div>
+              <div class="settings-danger">
+                <button id="btn-reset-save" class="btn-danger" type="button">
+                  トキツギのセーブデータを初期化する
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Toast notifications -->
+        <div id="toast-container" class="toast-container" aria-live="polite"></div>
+      </div>
+    </div>
+
+    <script type="module" src="/src/tokitsugi/main.ts"></script>
+  </body>
+</html>
