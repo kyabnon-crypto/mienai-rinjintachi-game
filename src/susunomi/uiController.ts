@@ -70,7 +70,12 @@ export class SusunomiUIController {
 
   private craftDrawer = document.getElementById('craft-drawer')!;
   private craftList = document.getElementById('craft-list')!;
+  private btnCraft = document.getElementById('btn-craft') as HTMLButtonElement;
   private craftBadge = document.getElementById('craft-badge')!;
+  private btnRoomQuick = document.getElementById('btn-room-quick') as HTMLButtonElement;
+  private roomQuickBadge = document.getElementById('room-quick-badge')!;
+  private btnResultCraft = document.getElementById('btn-result-craft') as HTMLButtonElement;
+  private resultCraftBadge = document.getElementById('result-craft-badge')!;
 
   private storyModal = document.getElementById('story-modal')!;
   private storyList = document.getElementById('story-list')!;
@@ -96,6 +101,17 @@ export class SusunomiUIController {
     this.updateHUD(gsm.state.selectedTrack);
   }
 
+  private toggleCraftDrawer(): void {
+    const willOpen = this.craftDrawer.classList.contains('hidden');
+    this.craftDrawer.classList.toggle('hidden');
+    if (willOpen) {
+      this.storyModal.classList.add('hidden');
+      this.settingsModal.classList.add('hidden');
+      this.renderCraftList();
+    }
+    this.notifyOverlayState();
+  }
+
   private bindEvents(): void {
     this.btnStart.addEventListener('click', () => this.cb.onStart());
 
@@ -106,15 +122,12 @@ export class SusunomiUIController {
       });
     });
 
-    document.getElementById('btn-craft')!.addEventListener('click', () => {
-      const willOpen = this.craftDrawer.classList.contains('hidden');
-      this.craftDrawer.classList.toggle('hidden');
-      if (willOpen) {
-        this.storyModal.classList.add('hidden');
-        this.settingsModal.classList.add('hidden');
-        this.renderCraftList();
-      }
-      this.notifyOverlayState();
+    this.btnCraft.addEventListener('click', () => this.toggleCraftDrawer());
+    document.getElementById('btn-kitchen-rank')!.addEventListener('click', () => this.toggleCraftDrawer());
+    this.btnRoomQuick.addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      this.toggleCraftDrawer();
     });
     document.getElementById('btn-close-craft')!.addEventListener('click', () => {
       this.craftDrawer.classList.add('hidden');
@@ -160,6 +173,11 @@ export class SusunomiUIController {
 
     document.getElementById('btn-pause')!.addEventListener('click', () => this.cb.onPause());
     document.getElementById('btn-resume')!.addEventListener('click', () => this.cb.onResume());
+    document.getElementById('btn-pause-craft')!.addEventListener('click', () => {
+      this.craftDrawer.classList.remove('hidden');
+      this.renderCraftList();
+      this.notifyOverlayState();
+    });
     document.getElementById('btn-pause-settings')!.addEventListener('click', () => {
       this.settingsModal.classList.remove('hidden');
       this.notifyOverlayState();
@@ -172,7 +190,7 @@ export class SusunomiUIController {
     });
 
     document.getElementById('btn-retry')!.addEventListener('click', () => this.cb.onRetry());
-    document.getElementById('btn-result-craft')!.addEventListener('click', () => {
+    this.btnResultCraft.addEventListener('click', () => {
       this.resultModal.classList.add('hidden');
       this.craftDrawer.classList.remove('hidden');
       this.renderCraftList();
@@ -423,7 +441,22 @@ export class SusunomiUIController {
       btn.textContent = unlocked ? label : `🔒 ${label}`;
     });
 
-    this.craftBadge.classList.toggle('hidden', !this.gsm.hasAnyAffordableUpgrade());
+    const affordableCount = this.gsm.getAffordableUpgradeCount();
+    const canUpgrade = affordableCount > 0;
+    const badgeLabel = `強化OK (${affordableCount})`;
+
+    this.btnCraft.classList.toggle('can-upgrade', canUpgrade);
+    this.craftBadge.classList.toggle('hidden', !canUpgrade);
+    this.craftBadge.textContent = canUpgrade ? `UP! ${affordableCount}` : '';
+
+    this.btnRoomQuick.classList.toggle('can-upgrade', canUpgrade);
+    this.roomQuickBadge.classList.toggle('hidden', !canUpgrade);
+    this.roomQuickBadge.textContent = canUpgrade ? badgeLabel : '';
+
+    this.btnResultCraft.classList.toggle('can-upgrade', canUpgrade);
+    this.resultCraftBadge.classList.toggle('hidden', !canUpgrade);
+    this.resultCraftBadge.textContent = canUpgrade ? badgeLabel : '';
+
     const unlockedStories = this.gsm.getUnlockedStoriesCount();
     this.storyBadge.classList.toggle('hidden', unlockedStories <= this.lastSeenStories);
 

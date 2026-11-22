@@ -96,7 +96,7 @@ export class KagemichiUIController {
       });
     });
 
-    document.getElementById('btn-craft')!.addEventListener('click', () => {
+    const toggleCraft = () => {
       const willOpen = this.craftDrawer.classList.contains('hidden');
       this.craftDrawer.classList.toggle('hidden');
       if (willOpen) {
@@ -105,7 +105,9 @@ export class KagemichiUIController {
         this.renderCraftList();
       }
       this.notifyOverlayState();
-    });
+    };
+    document.getElementById('btn-craft')!.addEventListener('click', toggleCraft);
+    document.getElementById('btn-station-rank')!.addEventListener('click', toggleCraft);
     document.getElementById('btn-close-craft')!.addEventListener('click', () => {
       this.craftDrawer.classList.add('hidden');
       this.notifyOverlayState();
@@ -349,7 +351,11 @@ export class KagemichiUIController {
         : `「おわりの駅の時計」Lv.${KAGEMICHI_TRACKS[tid].unlockClockLevel} で解放`;
     });
 
-    this.craftBadge.classList.toggle('hidden', !this.gsm.hasAnyAffordableUpgrade());
+    const affordableCount = this.gsm.getAffordableUpgradeCount();
+    const canUpgrade = affordableCount > 0;
+    document.getElementById('btn-craft')!.classList.toggle('can-upgrade', canUpgrade);
+    this.craftBadge.classList.toggle('hidden', !canUpgrade);
+    this.craftBadge.textContent = canUpgrade ? `UP! ${affordableCount}` : '';
     const unlockedStories = this.gsm.getUnlockedStoriesCount();
     this.storyBadge.classList.toggle('hidden', unlockedStories <= this.lastSeenStories);
 

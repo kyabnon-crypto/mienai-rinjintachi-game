@@ -168,8 +168,12 @@ export class SusunomiStateManager {
     return true;
   }
 
+  public getAffordableUpgradeCount(): number {
+    return SUSUNOMI_UPGRADES.filter((u) => this.canAffordUpgrade(u.id)).length;
+  }
+
   public hasAnyAffordableUpgrade(): boolean {
-    return SUSUNOMI_UPGRADES.some((u) => this.canAffordUpgrade(u.id));
+    return this.getAffordableUpgradeCount() > 0;
   }
 
   public getUnlockedStoriesCount(): number {

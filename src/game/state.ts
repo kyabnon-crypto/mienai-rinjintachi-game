@@ -146,8 +146,12 @@ export class GameStateManager {
     return this.state.tears >= cost.tears && this.state.gems >= cost.gems;
   }
 
+  public getAffordableUpgradeCount(): number {
+    return UPGRADES.filter((u) => this.canAffordUpgrade(u.id)).length;
+  }
+
   public hasAnyAffordableUpgrade(): boolean {
-    return UPGRADES.some((u) => this.canAffordUpgrade(u.id));
+    return this.getAffordableUpgradeCount() > 0;
   }
 
   public buyUpgrade(id: UpgradeId): boolean {

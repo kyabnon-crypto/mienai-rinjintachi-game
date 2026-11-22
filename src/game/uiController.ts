@@ -148,12 +148,14 @@ export class UIController {
     this.btnPolish.addEventListener('click', () => this.actions.onClickPolish());
     this.btnFever.addEventListener('click', () => this.actions.onClickFever());
 
-    document.getElementById('btn-craft')!.addEventListener('click', () => {
+    const toggleCraft = () => {
       const opening = this.craftDrawer.classList.contains('hidden');
       this.craftDrawer.classList.toggle('hidden');
       if (opening) this.renderCraftList();
       this.notifyOverlayState();
-    });
+    };
+    document.getElementById('btn-craft')!.addEventListener('click', toggleCraft);
+    document.getElementById('btn-vault-rank')!.addEventListener('click', toggleCraft);
     document.getElementById('btn-close-craft')!.addEventListener('click', () => {
       this.craftDrawer.classList.add('hidden');
       this.notifyOverlayState();
@@ -343,7 +345,11 @@ export class UIController {
     });
 
     // Badges
-    this.craftBadge.classList.toggle('hidden', !this.gsm.hasAnyAffordableUpgrade());
+    const affordableCount = this.gsm.getAffordableUpgradeCount();
+    const canUpgrade = affordableCount > 0;
+    document.getElementById('btn-craft')!.classList.toggle('can-upgrade', canUpgrade);
+    this.craftBadge.classList.toggle('hidden', !canUpgrade);
+    this.craftBadge.textContent = canUpgrade ? `UP! ${affordableCount}` : '';
     this.storyBadge.classList.toggle('hidden', !this.gsm.hasUnreadEpisode());
 
     if (!this.craftDrawer.classList.contains('hidden')) {

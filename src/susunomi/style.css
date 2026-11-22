@@ -385,9 +385,73 @@ body {
   transform: scale(0.95);
 }
 
+.kitchen-badge-btn {
+  cursor: pointer;
+  color: inherit;
+  font-family: var(--font-sans);
+  transition: border-color 0.16s, transform 0.12s, background 0.16s;
+}
+
+.kitchen-badge-btn:hover {
+  border-color: var(--gold);
+  background: rgba(54, 32, 18, 0.92);
+}
+
+.kitchen-badge-btn:active {
+  transform: scale(0.96);
+}
+
+.rank-up-hint {
+  font-size: 9.5px;
+  font-weight: 800;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: rgba(255, 196, 108, 0.2);
+  color: var(--gold);
+}
+
 .craft-toggle {
-  border-color: rgba(255, 184, 108, 0.45);
-  color: #ffe3bc;
+  background: linear-gradient(135deg, rgba(242, 152, 66, 0.92), rgba(188, 86, 28, 0.94));
+  border: 1px solid #ffdf9e;
+  color: #210e04;
+  font-weight: 900;
+  padding: 6px 13px;
+  box-shadow: 0 4px 16px rgba(236, 134, 48, 0.38);
+}
+
+.craft-toggle:hover {
+  filter: brightness(1.08);
+  border-color: #fff3c9;
+}
+
+.craft-toggle.can-upgrade {
+  box-shadow: 0 0 22px rgba(255, 206, 108, 0.78);
+  animation: upgradePulse 1.35s ease-in-out infinite alternate;
+}
+
+.upgrade-count-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: #ff4757;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  box-shadow: 0 0 10px rgba(255, 71, 87, 0.75);
+}
+
+@keyframes upgradePulse {
+  from {
+    transform: scale(1);
+    box-shadow: 0 0 14px rgba(255, 196, 98, 0.52);
+  }
+  to {
+    transform: scale(1.05);
+    box-shadow: 0 0 26px rgba(255, 224, 132, 0.92);
+  }
 }
 
 .notif-dot {
@@ -537,6 +601,78 @@ body {
   100% {
     transform: scale(1);
   }
+}
+
+/* Left-side Quick Room Upgrade Action Button */
+.touch-room-actions {
+  position: absolute;
+  left: max(18px, env(safe-area-inset-left));
+  bottom: 94px;
+  pointer-events: auto;
+}
+
+.room-action-btn {
+  position: relative;
+  width: 78px;
+  height: 78px;
+  border-radius: 50%;
+  border: 2px solid #ffd58a;
+  background: radial-gradient(circle at 32% 28%, rgba(235, 146, 62, 0.92), rgba(145, 64, 20, 0.95));
+  color: #fff8eb;
+  font-family: var(--font-sans);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(226, 120, 42, 0.42);
+  transition: transform 0.12s, box-shadow 0.2s, filter 0.15s;
+}
+
+.room-action-btn:hover {
+  filter: brightness(1.08);
+}
+
+.room-action-btn:active {
+  transform: scale(0.92);
+}
+
+.room-action-btn.can-upgrade {
+  border-color: #fff3b8;
+  box-shadow: 0 0 26px rgba(255, 210, 108, 0.85);
+  animation: upgradePulse 1.3s ease-in-out infinite alternate;
+}
+
+.room-quick-badge {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: #ff4757;
+  color: #fff;
+  font-size: 9.5px;
+  font-weight: 900;
+  border: 1.5px solid #fff3d6;
+  box-shadow: 0 2px 10px rgba(255, 71, 87, 0.72);
+  white-space: nowrap;
+}
+
+.room-btn-icon {
+  font-size: 21px;
+  line-height: 1;
+}
+
+.room-btn-text {
+  font-size: 11.5px;
+  font-weight: 900;
+  text-shadow: 0 1px 4px rgba(28, 12, 4, 0.65);
+}
+
+.room-btn-sub {
+  font-size: 8.8px;
+  color: #ffeec7;
 }
 
 /* Right-side Stir Action Button */
@@ -840,7 +976,7 @@ body {
   right: 0;
   bottom: 0;
   width: min(390px, 92%);
-  z-index: 40;
+  z-index: 48;
   pointer-events: auto;
   display: flex;
   flex-direction: column;
@@ -1087,6 +1223,35 @@ body {
 .pause-action-primary,
 .result-action-primary {
   width: 100%;
+}
+
+.btn-upgrade-cta {
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 11px 18px;
+  border-radius: 999px;
+  border: 1px solid #ffd58a;
+  background: linear-gradient(135deg, rgba(235, 146, 62, 0.28), rgba(188, 86, 28, 0.36));
+  color: #fff2d6;
+  font-family: var(--font-sans);
+  font-size: 13.5px;
+  font-weight: 900;
+  cursor: pointer;
+  transition: transform 0.14s, filter 0.15s, box-shadow 0.2s;
+}
+
+.btn-upgrade-cta:hover {
+  filter: brightness(1.1);
+}
+
+.btn-upgrade-cta.can-upgrade {
+  background: linear-gradient(135deg, #f2a24e, #c66022);
+  color: #210e04;
+  border-color: #fff2be;
+  box-shadow: 0 0 20px rgba(255, 198, 102, 0.65);
 }
 
 .btn-secondary,
@@ -1398,6 +1563,14 @@ body {
   .recipe-slot {
     min-width: 42px;
     padding: 2px 4px;
+  }
+  .touch-room-actions {
+    bottom: 78px;
+    left: 12px;
+  }
+  .room-action-btn {
+    width: 66px;
+    height: 66px;
   }
   .touch-actions {
     bottom: 78px;

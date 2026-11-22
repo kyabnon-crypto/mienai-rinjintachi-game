@@ -59,10 +59,11 @@
 
         <header class="hud-top">
           <div class="hud-top-left">
-            <div class="kitchen-badge">
+            <button id="btn-kitchen-rank" class="kitchen-badge kitchen-badge-btn" type="button" title="クリックで部屋の育成を開く">
               <span class="kitchen-rank-label">換気口の台所</span>
               <strong id="hud-kitchen-rank">Lv.1</strong>
-            </div>
+              <span class="rank-up-hint">▲育成</span>
+            </button>
             <div class="resource-pill" title="集めた香りの雫">
               <span class="res-icon res-drop"></span>
               <div class="res-meta">
@@ -102,8 +103,8 @@
             <button id="btn-story" class="icon-btn" type="button" title="換気口の記録（物語）">
               📖 <span id="story-badge" class="notif-dot hidden"></span>
             </button>
-            <button id="btn-craft" class="icon-btn craft-toggle" type="button" title="台所のしつらえ（設備強化）">
-              🍲 台所を整える <span id="craft-badge" class="notif-dot hidden"></span>
+            <button id="btn-craft" class="icon-btn craft-toggle" type="button" title="部屋の育成（台所の設備強化）">
+              🏠 部屋の育成 <span id="craft-badge" class="upgrade-count-badge hidden">UP!</span>
             </button>
             <button id="btn-settings" class="icon-btn" type="button" title="設定">⚙</button>
             <button id="btn-pause" class="icon-btn pause-btn" type="button" title="一時停止（Esc / P）" aria-label="一時停止">
@@ -134,7 +135,17 @@
           </div>
         </div>
 
-        <!-- Subtle Right-side Stir Action Button for effortless mobile landscape play -->
+        <!-- Left-side Quick Room Upgrade Action Button (easy to spot at a glance!) -->
+        <div class="touch-room-actions" aria-label="部屋の育成ショートカット">
+          <button id="btn-room-quick" class="room-action-btn" type="button" aria-label="部屋の育成を開く">
+            <span id="room-quick-badge" class="room-quick-badge hidden">強化OK</span>
+            <span class="room-btn-icon">🏠</span>
+            <span class="room-btn-text">部屋育成</span>
+            <span class="room-btn-sub">台所を強化</span>
+          </button>
+        </div>
+
+        <!-- Right-side Stir Action Button for effortless mobile landscape play -->
         <div class="touch-actions" aria-label="調理アクション">
           <button id="ctrl-stir" class="stir-action-btn ready" type="button" aria-label="木べらでかき混ぜる">
             <span class="stir-icon">🥄</span>
@@ -190,11 +201,11 @@
         </footer>
 
         <!-- Right Collapsible Kitchen Upgrade Drawer -->
-        <aside id="craft-drawer" class="side-drawer hidden" aria-label="台所のしつらえ">
+        <aside id="craft-drawer" class="side-drawer hidden" aria-label="部屋の育成（台所のしつらえ）">
           <div class="drawer-header">
             <div>
-              <h2>台所のしつらえ</h2>
-              <p>換気口の台所と銅鍋を整えると、より豊かな記憶の味が届きます</p>
+              <h2>🏠 部屋の育成（台所のしつらえ）</h2>
+              <p>換気口の台所と銅鍋を育てると、3Dの部屋がにぎやかになり獲得量も増えます</p>
             </div>
             <button id="btn-close-craft" class="close-btn" type="button" aria-label="閉じる">✕</button>
           </div>
@@ -226,11 +237,14 @@
                 <button id="btn-resume" class="btn-primary pause-action-primary" type="button">
                   ▶ 台所へ戻る（再開）
                 </button>
+                <button id="btn-pause-craft" class="btn-upgrade-cta" type="button">
+                  🏠 部屋を育成する（台所の強化）
+                </button>
                 <button id="btn-pause-settings" class="btn-secondary" type="button">
                   ⚙ 音量・タイミング設定
                 </button>
                 <button id="btn-return-lobby" class="btn-lobby" type="button">
-                  🏠 タイトルへ戻る
+                  ← タイトルへ戻る
                 </button>
               </div>
             </div>
@@ -272,11 +286,11 @@
                 <button id="btn-retry" class="btn-primary result-action-primary" type="button">
                   🍲 もう一度煮込む
                 </button>
-                <button id="btn-result-craft" class="btn-secondary" type="button">
-                  ✨ 台所を整える
+                <button id="btn-result-craft" class="btn-upgrade-cta" type="button">
+                  🏠 部屋を育成する <span id="result-craft-badge" class="upgrade-count-badge hidden">UP!</span>
                 </button>
                 <button id="btn-result-lobby" class="btn-lobby" type="button">
-                  🏠 タイトルへ
+                  ← タイトルへ
                 </button>
               </div>
             </div>

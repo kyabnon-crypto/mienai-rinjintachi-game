@@ -355,9 +355,65 @@ body {
   transform: translateY(-1px);
 }
 
+.vault-badge-btn {
+  cursor: pointer;
+  color: inherit;
+  font-family: var(--font-sans);
+  transition: border-color 0.16s, transform 0.12s;
+}
+
+.vault-badge-btn:hover {
+  border-color: #ffe39e;
+}
+
+.rank-up-hint {
+  font-size: 9.5px;
+  font-weight: 800;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: rgba(255, 224, 148, 0.2);
+  color: #ffe59e;
+}
+
 .craft-toggle {
-  border-color: rgba(236, 208, 132, 0.4);
-  color: #fff3d2;
+  background: linear-gradient(135deg, #f3cd7a, #c78c34);
+  border-color: #fff0be;
+  color: #1c1205;
+  font-weight: 900;
+  padding: 6px 13px;
+  box-shadow: 0 4px 16px rgba(236, 184, 88, 0.36);
+}
+
+.craft-toggle:hover {
+  background: linear-gradient(135deg, #fad88c, #d4983e);
+  border-color: #fff7db;
+}
+
+.craft-toggle.can-upgrade {
+  box-shadow: 0 0 22px rgba(255, 222, 132, 0.85);
+  animation: nmUpgradePulse 1.35s ease-in-out infinite alternate;
+}
+
+.upgrade-count-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: #ff4757;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 900;
+  box-shadow: 0 0 10px rgba(255, 71, 87, 0.75);
+}
+
+@keyframes nmUpgradePulse {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.05);
+  }
 }
 
 .notif-dot {

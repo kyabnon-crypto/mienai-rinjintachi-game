@@ -159,8 +159,12 @@ export class KagemichiStateManager {
     return true;
   }
 
+  public getAffordableUpgradeCount(): number {
+    return KAGEMICHI_UPGRADES.filter((u) => this.canAffordUpgrade(u.id)).length;
+  }
+
   public hasAnyAffordableUpgrade(): boolean {
-    return KAGEMICHI_UPGRADES.some((u) => this.canAffordUpgrade(u.id));
+    return this.getAffordableUpgradeCount() > 0;
   }
 
   public getUnlockedStoriesCount(): number {

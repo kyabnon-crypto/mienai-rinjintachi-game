@@ -63,10 +63,11 @@
         <!-- Top Bar -->
         <header class="hud-top">
           <div class="hud-top-left">
-            <div class="vault-badge">
+            <button id="btn-vault-rank" class="vault-badge vault-badge-btn" type="button" title="クリックで部屋の育成を開く">
               <span class="vault-rank-label">涙蔵</span>
               <strong id="hud-vault-rank">Lv.1</strong>
-            </div>
+              <span class="rank-up-hint">▲育成</span>
+            </button>
             <div class="resource-pill" title="集めた涙の結晶">
               <span class="res-icon res-tear"></span>
               <div class="res-meta">
@@ -107,8 +108,8 @@
             <button id="btn-story" class="icon-btn" type="button" title="記憶のラベル帳">
               📖 <span id="story-badge" class="notif-dot hidden"></span>
             </button>
-            <button id="btn-craft" class="icon-btn craft-toggle" type="button" title="蔵のしつらえ（設備強化）">
-              ✨ 蔵を育てる <span id="craft-badge" class="notif-dot hidden"></span>
+            <button id="btn-craft" class="icon-btn craft-toggle" type="button" title="部屋の育成（涙蔵の設備強化）">
+              🏠 部屋の育成 <span id="craft-badge" class="upgrade-count-badge hidden">UP!</span>
             </button>
             <button id="btn-settings" class="icon-btn" type="button" title="設定">⚙</button>
             <button id="btn-pause" class="icon-btn pause-btn" type="button" title="一時停止（Esc / P）" aria-label="一時停止">

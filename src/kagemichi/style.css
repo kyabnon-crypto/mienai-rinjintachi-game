@@ -374,9 +374,65 @@ body {
   background: rgba(28, 36, 62, 0.9);
 }
 
+.station-badge-btn {
+  cursor: pointer;
+  color: inherit;
+  font-family: var(--font-sans);
+  transition: border-color 0.16s, transform 0.12s;
+}
+
+.station-badge-btn:hover {
+  border-color: var(--amber);
+}
+
+.rank-up-hint {
+  font-size: 9.5px;
+  font-weight: 800;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: rgba(255, 202, 120, 0.2);
+  color: var(--amber);
+}
+
 .craft-toggle {
-  color: #ffe8bd;
-  border-color: rgba(255, 202, 120, 0.4);
+  background: linear-gradient(135deg, #ebb25c, #bd722a);
+  color: #1b1106;
+  font-weight: 900;
+  border-color: #ffe4a8;
+  padding: 6px 13px;
+  box-shadow: 0 4px 16px rgba(226, 152, 62, 0.36);
+}
+
+.craft-toggle:hover {
+  background: linear-gradient(135deg, #f5c06d, #cc7f32);
+  border-color: #fff2c6;
+}
+
+.craft-toggle.can-upgrade {
+  box-shadow: 0 0 22px rgba(255, 210, 118, 0.8);
+  animation: kgUpgradePulse 1.35s ease-in-out infinite alternate;
+}
+
+.upgrade-count-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: #ff4757;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 900;
+  box-shadow: 0 0 10px rgba(255, 71, 87, 0.75);
+}
+
+@keyframes kgUpgradePulse {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.05);
+  }
 }
 
 .notif-dot {
