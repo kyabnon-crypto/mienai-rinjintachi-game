@@ -1,6 +1,26 @@
 import './portal.css';
 
 function renderSaveProgress(): void {
+  const wsEl = document.getElementById('prog-wasuredama');
+  if (wsEl) {
+    try {
+      const raw = localStorage.getItem('mienai_wasuredama_v1');
+      if (raw) {
+        const st = JSON.parse(raw);
+        const totalLv = Object.values(st.upgrades || {}).reduce(
+          (a: number, b: unknown) => a + (typeof b === 'number' ? b : 0),
+          0
+        );
+        const rank = 1 + Math.floor(totalLv / 2);
+        const sprouts = Number(st.sprouts || 0);
+        const delivered = Number(st.totalDeliveries || 0);
+        wsEl.textContent = `街灯の広場 Lv.${rank} ・ 思い出の芽 ${sprouts} ・ お届け ${delivered}回`;
+      }
+    } catch {
+      // Ignore parse errors
+    }
+  }
+
   const tkEl = document.getElementById('prog-tokitsugi');
   if (tkEl) {
     try {

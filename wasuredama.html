@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+    />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="theme-color" content="#080c1a" />
+    <link rel="manifest" href="./manifest.json" />
+    <meta
+      name="description"
+      content="見えない隣人たち — 夜の街灯の下で、ワスレダマとともに人が落とした“物ではない忘れ物”を拾い集め、まだ必要な人へそっと届ける3D WebGL夜道探索アクション"
+    />
+    <title>街灯の下のわすれ玉 〜ワスレダマ〜 | 見えない隣人たち</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700&family=Zen+Maru+Gothic:wght@500;700;900&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div id="app">
+      <canvas id="game-canvas" aria-label="街灯の下のわすれ玉 3D夜の街角広場"></canvas>
+      <canvas id="fx-canvas" aria-hidden="true"></canvas>
+      <div id="floating-layer" aria-hidden="true"></div>
+
+      <!-- Title / Lobby overlay -->
+      <section id="title-screen" class="overlay-screen">
+        <div class="title-card">
+          <p class="title-eyebrow">見えない隣人たち — 第四話 プレイアブル</p>
+          <h1 class="title-main">街灯の下のわすれ玉</h1>
+          <p class="title-sub">〜 街灯の下の忘れ物係 ワスレダマ 〜</p>
+          <p class="title-lead">
+            夜の街灯の光の輪のなかで、人が落とした“物ではない忘れ物”をそっと拾い集めよう。<br />
+            夢・約束・希望の光を布袋に詰めて、「まだ必要な人」のそばへ静かに届ける夜道アクション。
+          </p>
+          <button id="btn-start" class="btn-primary" type="button">
+            <span class="btn-glow-dot"></span>
+            街灯の下へ歩き出す
+          </button>
+          <p class="title-hint">
+            起動時に自動で横画面表示 ・ タッチドラッグ / WASD・矢印キーで歩行 ・ 💡 / Space で灯りパルス浄化 ・ 音声ON推奨
+          </p>
+          <div id="loading-status" class="loading-status">3Dモデルと楽曲を準備しています…</div>
+          <a href="./index.html" class="portal-back-link">← 見えない隣人たち 一覧へもどる</a>
+        </div>
+      </section>
+
+      <!-- Main HUD -->
+      <div id="hud" class="hud hidden">
+        <div class="song-progress-track" aria-hidden="true">
+          <div id="song-progress-fill" class="song-progress-fill"></div>
+        </div>
+
+        <header class="hud-top">
+          <div class="hud-top-left">
+            <button id="btn-corner-rank" class="corner-badge corner-badge-btn" type="button" title="クリックで部屋の育成を開く">
+              <span class="corner-rank-label">街灯の広場</span>
+              <strong id="hud-corner-rank">Lv.1</strong>
+              <span class="rank-up-hint">▲育成</span>
+            </button>
+            <div class="resource-pill" title="集めたこころの灯り">
+              <span class="res-icon res-light"></span>
+              <div class="res-meta">
+                <span class="res-label">こころの灯り</span>
+                <strong id="hud-lights">0</strong>
+              </div>
+            </div>
+            <div class="resource-pill" title="忘れ物を届けた証・思い出の芽">
+              <span class="res-icon res-sprout"></span>
+              <div class="res-meta">
+                <span class="res-label">思い出の芽</span>
+                <strong id="hud-sprouts">0</strong>
+              </div>
+            </div>
+            <div class="shield-pill" title="街灯のまもり（ためらいのもや防御）">
+              <span class="shield-label">まもり</span>
+              <span id="hud-shields" class="shield-marks">―</span>
+            </div>
+          </div>
+
+          <div class="hud-top-right">
+            <div class="time-pill" title="楽曲の残り時間">
+              <span class="time-dot"></span>
+              <strong id="hud-time-left">1:02</strong>
+            </div>
+            <div class="track-switcher" role="group" aria-label="楽曲バージョン切替">
+              <button class="track-btn active" data-track="dreamy" type="button">
+                🌙 Dreamy
+              </button>
+              <button class="track-btn" data-track="normal" type="button">
+                ✨ 通常版
+              </button>
+              <button class="track-btn" data-track="instrumental" type="button">
+                🎹 Inst
+              </button>
+            </div>
+            <button id="btn-story" class="icon-btn" type="button" title="街灯の記録（物語）">
+              📖 <span id="story-badge" class="notif-dot hidden"></span>
+            </button>
+            <button id="btn-craft" class="icon-btn craft-toggle" type="button" title="部屋の育成（街角のしつらえ）">
+              🏠 部屋の育成 <span id="craft-badge" class="upgrade-count-badge hidden">UP!</span>
+            </button>
+            <button id="btn-settings" class="icon-btn" type="button" title="設定">⚙</button>
+            <button id="btn-pause" class="icon-btn pause-btn" type="button" title="一時停止（Esc / P）" aria-label="一時停止">
+              ⏸
+            </button>
+          </div>
+        </header>
+
+        <!-- Center Top: Active Recipient Delivery Order + Starlit Fever Banner + Combo -->
+        <div class="hud-center-top">
+          <div id="order-card" class="order-card" aria-label="今夜のお届け先">
+            <div class="order-head">
+              <span class="order-tag">まだ必要な人へ</span>
+              <strong id="order-name" class="order-name">疲れた大人の帰り道</strong>
+            </div>
+            <div id="order-slots" class="order-slots"></div>
+          </div>
+
+          <div id="fever-banner" class="fever-banner hidden">
+            <span class="fever-title">STARLIT STREET</span>
+            <span id="fever-timer" class="fever-timer">14.0s</span>
+          </div>
+
+          <div id="combo-display" class="combo-display hidden">
+            <strong id="combo-count">0</strong>
+            <span class="combo-word">COMBO</span>
+            <span id="combo-mult" class="combo-mult">×1.00</span>
+          </div>
+        </div>
+
+        <!-- Left-side Quick Room Upgrade Action Button -->
+        <div class="touch-room-actions" aria-label="部屋の育成ショートカット">
+          <button id="btn-room-quick" class="room-action-btn" type="button" aria-label="部屋の育成を開く">
+            <span id="room-quick-badge" class="room-quick-badge hidden">強化OK</span>
+            <span class="room-btn-icon">🏠</span>
+            <span class="room-btn-text">部屋育成</span>
+            <span class="room-btn-sub">街角を強化</span>
+          </button>
+        </div>
+
+        <!-- Right-side Lamp Pulse Action Button -->
+        <div class="touch-actions" aria-label="街灯アクション">
+          <button id="ctrl-pulse" class="pulse-action-btn ready" type="button" aria-label="街灯の灯りパルスでもや浄化＆引き寄せ">
+            <span class="pulse-icon">💡</span>
+            <span class="pulse-text">灯りパルス</span>
+            <span class="pulse-sub">浄化＆回収</span>
+            <span class="pulse-cd-track"><span id="pulse-cd-fill" class="pulse-cd-fill"></span></span>
+          </button>
+        </div>
+
+        <footer class="hud-bottom">
+          <!-- Left: Burlap Sack Progress & Deliver -->
+          <div class="sack-panel">
+            <div class="sack-visual">
+              <div class="sack-bag-mini">
+                <div id="sack-fill" class="sack-fill"></div>
+              </div>
+              <span id="sack-pct" class="sack-pct">0%</span>
+            </div>
+            <div class="sack-info">
+              <div class="sack-title-row">
+                <span class="sack-name">たいせつな布袋</span>
+                <span id="sack-count" class="sack-count">0 / 12</span>
+              </div>
+              <button id="btn-deliver-sack" class="btn-deliver-sack" type="button" disabled>
+                忘れ物を集めています (0/12)
+              </button>
+            </div>
+          </div>
+
+          <!-- Center: Beat Pulse & STARLIT STREET Gauge -->
+          <div class="beat-center-panel">
+            <div class="beat-dots" aria-hidden="true">
+              <span class="beat-dot" data-beat="0"></span>
+              <span class="beat-dot" data-beat="1"></span>
+              <span class="beat-dot" data-beat="2"></span>
+              <span class="beat-dot" data-beat="3"></span>
+            </div>
+            <div class="fever-bar-wrap">
+              <div class="fever-bar-track">
+                <div id="fever-bar-fill" class="fever-bar-fill"></div>
+              </div>
+              <button id="btn-fever" class="btn-fever" type="button" disabled>
+                星明かりゲージ 0%
+              </button>
+            </div>
+          </div>
+
+          <!-- Right: Now Playing & Hint -->
+          <div class="quick-hint-panel">
+            <div id="now-playing" class="now-playing">♪ ワスレダマ — Dreamy Ver.</div>
+            <div class="hint-line">ドラッグ / WASD で歩行回収 ・ 必要な人へ近づいてお届け ・ 💡 / Space で灯りパルス</div>
+          </div>
+        </footer>
+
+        <!-- Right Collapsible Street Corner Upgrade Drawer -->
+        <aside id="craft-drawer" class="side-drawer hidden" aria-label="部屋の育成（街角のしつらえ）">
+          <div class="drawer-header">
+            <div>
+              <h2>🏠 部屋の育成（街角のしつらえ）</h2>
+              <p>街灯の下の落とし物置き場を整えると、3Dの街角が明るくなり獲得量も増えます</p>
+            </div>
+            <button id="btn-close-craft" class="close-btn" type="button" aria-label="閉じる">✕</button>
+          </div>
+          <div id="craft-list" class="craft-list"></div>
+        </aside>
+
+        <!-- Pause Modal -->
+        <div id="pause-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="pause-modal-title">
+          <div class="modal-card modal-pause">
+            <div class="pause-body">
+              <p class="pause-eyebrow">PAUSED</p>
+              <h2 id="pause-modal-title">街灯の下のひとやすみ</h2>
+              <p class="pause-sub">進行状況は自動で保存されています</p>
+              <div class="pause-stats">
+                <div class="pause-stat">
+                  <span>現在のコンボ</span>
+                  <strong id="pause-stat-combo">0</strong>
+                </div>
+                <div class="pause-stat">
+                  <span>こころの灯り</span>
+                  <strong id="pause-stat-lights">0</strong>
+                </div>
+                <div class="pause-stat">
+                  <span>思い出の芽</span>
+                  <strong id="pause-stat-sprouts">0</strong>
+                </div>
+              </div>
+              <div class="pause-actions">
+                <button id="btn-resume" class="btn-primary pause-action-primary" type="button">
+                  ▶ 夜道へ戻る（再開）
+                </button>
+                <button id="btn-pause-craft" class="btn-upgrade-cta" type="button">
+                  🏠 部屋を育成する（街角の強化）
+                </button>
+                <button id="btn-pause-settings" class="btn-secondary" type="button">
+                  ⚙ 音量・タイミング設定
+                </button>
+                <button id="btn-return-lobby" class="btn-lobby" type="button">
+                  ← タイトルへ戻る
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Result Modal -->
+        <div id="result-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="result-modal-title">
+          <div class="modal-card modal-result">
+            <div class="result-body">
+              <div class="result-head">
+                <div>
+                  <p class="pause-eyebrow">LIGHT RETURNED</p>
+                  <h2 id="result-modal-title">今夜のお届け記録</h2>
+                  <p id="result-track-name" class="result-track">♪ ワスレダマ — Dreamy Ver.</p>
+                </div>
+                <div id="result-rank" class="result-rank rank-s">S</div>
+              </div>
+
+              <div class="result-grid">
+                <div class="result-metric"><span>拾った忘れ物</span><strong id="res-picked">0</strong></div>
+                <div class="result-metric"><span>お届け達成</span><strong id="res-orders">0</strong></div>
+                <div class="result-metric"><span>MAX COMBO</span><strong id="res-max-combo">0</strong></div>
+                <div class="result-metric"><span>もや浄化</span><strong id="res-cleared">0</strong></div>
+              </div>
+
+              <div class="result-rewards">
+                <div class="reward-pill">
+                  <span>集めたこころの灯り</span>
+                  <strong id="res-lights">+0</strong>
+                </div>
+                <div class="reward-pill">
+                  <span>芽吹いた思い出の芽</span>
+                  <strong id="res-sprouts">+0</strong>
+                </div>
+              </div>
+
+              <div class="result-actions">
+                <button id="btn-retry" class="btn-primary result-action-primary" type="button">
+                  💡 もう一度夜道を歩く
+                </button>
+                <button id="btn-result-craft" class="btn-upgrade-cta" type="button">
+                  🏠 部屋を育成する <span id="result-craft-badge" class="upgrade-count-badge hidden">UP!</span>
+                </button>
+                <button id="btn-result-lobby" class="btn-lobby" type="button">
+                  ← タイトルへ
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Story Modal -->
+        <div id="story-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="story-modal-title">
+          <div class="modal-card modal-story">
+            <div class="modal-header">
+              <div>
+                <h2 id="story-modal-title">街灯の記録 — 第四話『街灯の下の忘れ物係』</h2>
+                <p>古いノートを綴じるか、忘れ物を届けることで物語がひらかれます</p>
+              </div>
+              <button id="btn-close-story" class="close-btn" type="button" aria-label="閉じる">✕</button>
+            </div>
+            <div id="story-list" class="story-list"></div>
+          </div>
+        </div>
+
+        <!-- Settings Modal -->
+        <div id="settings-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="settings-modal-title">
+          <div class="modal-card modal-settings">
+            <div class="modal-header">
+              <h2 id="settings-modal-title">街角の設定</h2>
+              <button id="btn-close-settings" class="close-btn" type="button" aria-label="閉じる">✕</button>
+            </div>
+            <div class="settings-body">
+              <label class="setting-row">
+                <span>BGM 音量</span>
+                <input id="opt-bgm" type="range" min="0" max="100" value="72" />
+                <strong id="opt-bgm-val">72%</strong>
+              </label>
+              <label class="setting-row">
+                <span>効果音 音量</span>
+                <input id="opt-se" type="range" min="0" max="100" value="85" />
+                <strong id="opt-se-val">85%</strong>
+              </label>
+              <label class="setting-row">
+                <span>タイミング補正</span>
+                <input id="opt-offset" type="range" min="-150" max="150" step="5" value="0" />
+                <strong id="opt-offset-val">0ms</strong>
+              </label>
+              <hr class="settings-sep" />
+              <div class="settings-links">
+                <a class="portal-link-btn" href="./index.html">← 見えない隣人たち ポータルへ戻る</a>
+              </div>
+              <div class="settings-danger">
+                <button id="btn-reset-save" class="btn-danger" type="button">
+                  ワスレダマのセーブデータを初期化する
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Toast notifications -->
+        <div id="toast-container" class="toast-container" aria-live="polite"></div>
+      </div>
+    </div>
+
+    <script type="module" src="/src/wasuredama/main.ts"></script>
+  </body>
+</html>

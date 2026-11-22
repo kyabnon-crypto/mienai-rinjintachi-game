@@ -6,7 +6,17 @@
 
 ## 収録タイトル
 
-### 03. 時繋ぎの懐中時計 〜トキツギ〜（NEW!）
+### 04. 街灯の下のわすれ玉 〜ワスレダマ〜（NEW!）
+- **ジャンル**：3D 夜の街角広場・わすれ玉回収＆そっとお届けアクション（[`wasuredama.html`](wasuredama.html)）
+- **舞台**：誰もいない夜の住宅街「街灯の下の落とし物置き場」
+- **特徴**：
+  - リグ・アニメーション済み `wasuredama.glb`（`Walking` / `Running`）＋街灯の光の輪・「わすれもの」吊り看板・雨上がりの水たまり・大きな麻袋・希望の小瓶＆約束の結び糸・古いノート「わたしの夢」・「まだ必要な人へ」仕分け棚・ストリングライトを3D空間で再現。
+  - タッチドラッグや WASD / 矢印キーで石畳の夜道を自由に歩き、5種類の「物ではない忘れ物」（言いかけてやめた夢・途中で諦めた約束・心の奥にしまった希望・古いノート・星灯りのわすれ玉）を布袋へ集めて、「まだ必要な人」のそばへそっと届けよう。
+  - **灯りパルス（LAMP BLOOM）**で周囲の「ためらいのもや」を一斉浄化＆近くの忘れ物を布袋へ引き寄せ。
+  - ゲージMAXで **STARLIT STREET（星明かりの夜道）**発動！街灯と吊り電球が満天の星明かりのように輝き、すべてのもやが星灯りのわすれ玉へ変化＆2倍スコアの爽快フィーバー！
+  - 公式3アレンジ（`Dreamy Ver.` / `通常版` / `Instrumental` 各62秒ゲームサイズ）、6種類の街角設備強化（街灯のあかり・夜道の吊り電球・たいせつな布袋・仕分け棚・希望の小瓶と結び糸・古いノートが3D空間に反映）、物語『第四話：街灯の下の忘れ物係』全5章を収録。
+
+### 03. 時繋ぎの懐中時計 〜トキツギ〜
 - **ジャンル**：3D 押し入れ時計工房・懐中時計リズム修繕＆金の糸つなぎ（[`tokitsugi.html`](tokitsugi.html)）
 - **舞台**：どの家の押し入れの奥にもある「わずかな隙間の時計工房」
 - **特徴**：
@@ -65,16 +75,18 @@ npm run build
 
 ```text
 ├── index.html                  # 見えない隣人たち ゲーム選択ポータル
+├── wasuredama.html             # 04. 街灯の下のわすれ玉 〜ワスレダマ〜
 ├── tokitsugi.html              # 03. 時繋ぎの懐中時計 〜トキツギ〜
 ├── susunomi.html               # 01. 記憶の香り鍋 〜ススノミ〜
 ├── kagemichi.html              # 02. 終電のランタン 〜カゲミチ〜
 ├── namidabin.html              # 12. 涙蔵のオルゴール 〜ナミダビン〜
 ├── public/assets/
-│   ├── models/                 # tokitsugi.glb / susunomi.glb / kagemichi.glb / namidabin.glb
+│   ├── models/                 # wasuredama.glb / tokitsugi.glb / susunomi.glb / kagemichi.glb / namidabin.glb
 │   ├── audio/                  # 各キャラクター公式3バージョン（MP3）
 │   └── images/                 # ポータル用キャラクターサムネイル
 └── src/
     ├── portal.ts / portal.css  # 常世町ポータル
+    ├── wasuredama/             # ワスレダマ 3D街灯の広場（scene/actor/system/audio/state/ui）
     ├── tokitsugi/              # トキツギ 3D押し入れ時計工房（scene/actor/system/audio/state/ui）
     ├── susunomi/               # ススノミ 3D換気口キッチン（scene/actor/system/audio/state/ui）
     ├── kagemichi/              # カゲミチ 3Dランナー（scene/actor/runner/audio/state/ui）
