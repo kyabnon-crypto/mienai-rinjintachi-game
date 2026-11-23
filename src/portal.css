@@ -92,6 +92,10 @@ body {
   box-shadow: 0 26px 60px rgba(0, 0, 0, 0.58);
 }
 
+.card-tomerun:hover {
+  border-color: rgba(152, 220, 255, 0.72);
+}
+
 .card-kazoeru:hover {
   border-color: rgba(255, 214, 132, 0.68);
 }
@@ -152,6 +156,10 @@ body {
   transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
+.card-tomerun .card-visual img {
+  object-position: center 42%;
+}
+
 .card-kazoeru .card-visual img {
   object-position: center 46%;
 }
@@ -205,6 +213,11 @@ body {
   background: rgba(10, 14, 28, 0.78);
   border: 1px solid rgba(255, 255, 255, 0.2);
   color: #fff3da;
+}
+
+.card-tomerun .episode-tag {
+  color: #a6e2ff;
+  border-color: rgba(152, 220, 255, 0.68);
 }
 
 .card-kazoeru .episode-tag {
@@ -279,6 +292,10 @@ body {
   font-weight: 700;
 }
 
+.card-tomerun .card-char {
+  color: #a6e2ff;
+}
+
 .card-kazoeru .card-char {
   color: #ffe096;
 }
@@ -350,6 +367,12 @@ body {
 .play-link:hover {
   transform: translateY(-1px);
   filter: brightness(1.06);
+}
+
+.play-tomerun {
+  background: linear-gradient(135deg, #9ce0ff, #54a8be 55%, #e4b65c);
+  color: #0b1c2a;
+  box-shadow: 0 8px 22px rgba(114, 198, 232, 0.44);
 }
 
 .play-kazoeru {

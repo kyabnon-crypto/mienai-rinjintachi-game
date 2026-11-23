@@ -1,6 +1,26 @@
 import './portal.css';
 
 function renderSaveProgress(): void {
+  const trEl = document.getElementById('prog-tomerun');
+  if (trEl) {
+    try {
+      const raw = localStorage.getItem('mienai_tomerun_v1');
+      if (raw) {
+        const st = JSON.parse(raw);
+        const totalLv = Object.values(st.upgrades || {}).reduce(
+          (a: number, b: unknown) => a + (typeof b === 'number' ? b : 0),
+          0
+        );
+        const rank = 1 + Math.floor(totalLv / 2);
+        const jars = Number(st.jars || 0);
+        const saved = Number(st.totalMomentsSaved || 0);
+        trEl.textContent = `時間保存室 Lv.${rank} ・ 宝物の時間瓶 ${jars} ・ 保存 ${saved}件`;
+      }
+    } catch {
+      // Ignore parse errors
+    }
+  }
+
   const kzEl = document.getElementById('prog-kazoeru');
   if (kzEl) {
     try {

@@ -13,6 +13,7 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: resolve(__dirname, 'index.html'),
+        tomerun: resolve(__dirname, 'tomerun.html'),
         kazoeru: resolve(__dirname, 'kazoeru.html'),
         tsumazuki: resolve(__dirname, 'tsumazuki.html'),
         henjiro: resolve(__dirname, 'henjiro.html'),

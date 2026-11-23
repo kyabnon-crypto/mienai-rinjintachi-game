@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+    />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="theme-color" content="#081324" />
+    <link rel="manifest" href="./manifest.json" />
+    <meta
+      name="description"
+      content="見えない隣人たち — 夜の冷蔵庫の奥にある秘密の棚で、時間保存士トメルンと砂時計のバルブを回し「終わってほしくない食卓」や大切な時間をそっと守る3D WebGLアクション"
+    />
+    <title>冷蔵庫の奥の砂時計 〜トメルン〜 | 見えない隣人たち</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700&family=Zen+Maru+Gothic:wght@500;700;900&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div id="app">
+      <canvas id="game-canvas" aria-label="冷蔵庫の奥の砂時計 3D時間保存室"></canvas>
+      <canvas id="fx-canvas" aria-hidden="true"></canvas>
+      <div id="floating-layer" aria-hidden="true"></div>
+
+      <!-- Title / Lobby overlay -->
+      <section id="title-screen" class="overlay-screen">
+        <div class="title-card">
+          <p class="title-eyebrow">見えない隣人たち — 第九話 プレイアブル</p>
+          <h1 class="title-main">冷蔵庫の奥の砂時計</h1>
+          <p class="title-sub">〜 冷蔵庫の奥の時間保存士 トメルン 〜</p>
+          <p class="title-lead">
+            夜の冷蔵庫のいちばん奥にある、だれも知らない“もうひとつの棚”。<br />
+            時間ランタンの灯りの下で真鍮バルブを回し、終わってほしくない食卓や大切な時間をそっと瓶に保存しよう。
+          </p>
+          <button id="btn-start" class="btn-primary" type="button">
+            <span class="btn-glow-dot"></span>
+            冷蔵庫の奥の秘密の棚をのぞく
+          </button>
+          <p class="title-hint">
+            起動時に自動で横画面表示 ・ タップ / ドラッグ / WASD で移動＆時間保存 ・ ⏳ / Space で「バルブ回し」 ・ 音声ON推奨
+          </p>
+          <div id="loading-status" class="loading-status">3Dモデルと楽曲を準備しています…</div>
+          <a href="./index.html" class="portal-back-link">← 見えない隣人たち 一覧へもどる</a>
+        </div>
+      </section>
+
+      <!-- Main HUD -->
+      <div id="hud" class="hud hidden">
+        <div class="song-progress-track" aria-hidden="true">
+          <div id="song-progress-fill" class="song-progress-fill"></div>
+        </div>
+
+        <header class="hud-top">
+          <div class="hud-top-left">
+            <button id="btn-room-rank" class="room-badge room-badge-btn" type="button" title="クリックで部屋の育成を開く">
+              <span class="room-rank-label">時間保存室</span>
+              <strong id="hud-room-rank">Lv.1</strong>
+              <span class="rank-up-hint">▲育成</span>
+            </button>
+            <div class="resource-pill" title="時の砂">
+              <span class="res-icon res-sands"></span>
+              <div class="res-meta">
+                <span class="res-label">時の砂</span>
+                <strong id="hud-sands">0</strong>
+              </div>
+            </div>
+            <div class="resource-pill" title="宝物の時間瓶">
+              <span class="res-icon res-jars"></span>
+              <div class="res-meta">
+                <span class="res-label">宝物の時間瓶</span>
+                <strong id="hud-jars">0</strong>
+              </div>
+            </div>
+            <div class="shield-pill" title="青いふわふわ毛布のぬくもり（せかしの秒針防御）">
+              <span class="shield-label">ぬくもり</span>
+              <span id="hud-shields" class="shield-marks">―</span>
+            </div>
+          </div>
+
+          <div class="hud-top-right">
+            <div class="time-pill" title="楽曲の残り時間">
+              <span class="time-dot"></span>
+              <strong id="hud-time-left">1:02</strong>
+            </div>
+            <div class="track-switcher" role="group" aria-label="楽曲バージョン切替">
+              <button class="track-btn active" data-track="dreamy" type="button">
+                🌙 Dreamy
+              </button>
+              <button class="track-btn" data-track="normal" type="button">
+                ✨ 通常版
+              </button>
+              <button class="track-btn" data-track="instrumental" type="button">
+                🎹 Inst
+              </button>
+            </div>
+            <button id="btn-story" class="icon-btn" type="button" title="時間保存日誌（物語）">
+              📖 <span id="story-badge" class="notif-dot hidden"></span>
+            </button>
+            <button id="btn-craft" class="icon-btn craft-toggle" type="button" title="部屋の育成（冷蔵庫の奥の時間保存室）">
+              🏠 部屋の育成 <span id="craft-badge" class="upgrade-count-badge hidden">UP!</span>
+            </button>
+            <button id="btn-settings" class="icon-btn" type="button" title="設定">⚙</button>
+            <button id="btn-pause" class="icon-btn pause-btn" type="button" title="一時停止（Esc / P）" aria-label="一時停止">
+              ⏸
+            </button>
+          </div>
+        </header>
+
+        <!-- Center Top: Active Preservation Order + ETERNAL SHELF Fever Banner + Combo -->
+        <div class="hud-center-top">
+          <div id="order-card" class="order-card" aria-label="きょうの保存オーダー">
+            <div class="order-head">
+              <span class="order-tag">きょうの保存オーダー</span>
+              <strong id="order-name" class="order-name">終わってほしくない食卓の湯気</strong>
+            </div>
+            <div id="order-slots" class="order-slots"></div>
+          </div>
+
+          <div id="fever-banner" class="fever-banner hidden">
+            <span class="fever-title">ETERNAL SHELF</span>
+            <span id="fever-timer" class="fever-timer">14.0s</span>
+          </div>
+
+          <div id="combo-display" class="combo-display hidden">
+            <strong id="combo-count">0</strong>
+            <span class="combo-word">COMBO</span>
+            <span id="combo-mult" class="combo-mult">×1.00</span>
+          </div>
+        </div>
+
+        <!-- Left-side Quick Room Upgrade Action Button -->
+        <div class="touch-room-actions" aria-label="部屋の育成ショートカット">
+          <button id="btn-room-quick" class="room-action-btn" type="button" aria-label="部屋の育成を開く">
+            <span id="room-quick-badge" class="room-quick-badge hidden">強化OK</span>
+            <span class="room-btn-icon">🏠</span>
+            <span class="room-btn-text">部屋育成</span>
+            <span class="room-btn-sub">時間保存室</span>
+          </button>
+        </div>
+
+        <!-- Right-side VALVE PAUSE ("バルブ回し") Action Button -->
+        <div class="touch-actions" aria-label="バルブ回しアクション">
+          <button id="ctrl-valvepause" class="valve-action-btn ready" type="button" aria-label="バルブ回しで時間停止と一斉延長">
+            <span class="valve-icon">⏳</span>
+            <span class="valve-text">バルブ回し</span>
+            <span class="valve-sub">時間停止＆全棚＋</span>
+            <span class="valve-cd-track"><span id="valvepause-cd-fill" class="valve-cd-fill"></span></span>
+          </button>
+        </div>
+
+        <footer class="hud-bottom">
+          <!-- Left: Time Jar -> Secret Shelf Bottling Progress -->
+          <div class="jar-panel">
+            <div class="jar-visual">
+              <div class="jar-meter-mini">
+                <div id="jar-fill" class="jar-fill"></div>
+              </div>
+              <span id="jar-pct" class="jar-pct">0%</span>
+            </div>
+            <div class="jar-info">
+              <div class="jar-title-row">
+                <span class="jar-name">秘密の棚の時間瓶</span>
+                <span id="jar-count" class="jar-count">0 / 12</span>
+              </div>
+              <button id="btn-bottle-shelf" class="btn-bottle-shelf" type="button" disabled>
+                時間の瓶に収集中 (0/12)
+              </button>
+            </div>
+          </div>
+
+          <!-- Center: Beat Pulse & ETERNAL SHELF Gauge -->
+          <div class="beat-center-panel">
+            <div class="beat-dots" aria-hidden="true">
+              <span class="beat-dot" data-beat="0"></span>
+              <span class="beat-dot" data-beat="1"></span>
+              <span class="beat-dot" data-beat="2"></span>
+              <span class="beat-dot" data-beat="3"></span>
+            </div>
+            <div class="fever-bar-wrap">
+              <div class="fever-bar-track">
+                <div id="fever-bar-fill" class="fever-bar-fill"></div>
+              </div>
+              <button id="btn-fever" class="btn-fever" type="button" disabled>
+                時間ランタン 0%
+              </button>
+            </div>
+          </div>
+
+          <!-- Right: Now Playing & Hint -->
+          <div class="quick-hint-panel">
+            <div id="now-playing" class="now-playing">♪ トメルン — Dreamy Ver.</div>
+            <div class="hint-line">欠片を集め4スポットの時間を保存 ・ ⏳ / Space でバルブ回し</div>
+          </div>
+        </footer>
+
+        <!-- Right Collapsible Room Upgrade Drawer -->
+        <aside id="craft-drawer" class="side-drawer hidden" aria-label="部屋の育成（冷蔵庫の奥の時間保存室）">
+          <div class="drawer-header">
+            <div>
+              <h2>🏠 部屋の育成（冷蔵庫の奥の時間保存室）</h2>
+              <p>もうひとつの棚を整えると3Dの大きな砂時計・時間ランタン・食卓の瓶・毛布・ノート机が豊かになり、時の砂も増えます</p>
+            </div>
+            <button id="btn-close-craft" class="close-btn" type="button" aria-label="閉じる">✕</button>
+          </div>
+          <div id="craft-list" class="craft-list"></div>
+        </aside>
+
+        <!-- Pause Modal -->
+        <div id="pause-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="pause-modal-title">
+          <div class="modal-card modal-pause">
+            <div class="pause-body">
+              <p class="pause-eyebrow">PAUSED</p>
+              <h2 id="pause-modal-title">青い毛布の上でひとやすみ</h2>
+              <p class="pause-sub">進行状況は自動で保存されています</p>
+              <div class="pause-stats">
+                <div class="pause-stat">
+                  <span>現在のコンボ</span>
+                  <strong id="pause-stat-combo">0</strong>
+                </div>
+                <div class="pause-stat">
+                  <span>時の砂</span>
+                  <strong id="pause-stat-sands">0</strong>
+                </div>
+                <div class="pause-stat">
+                  <span>宝物の時間瓶</span>
+                  <strong id="pause-stat-jars">0</strong>
+                </div>
+              </div>
+              <div class="pause-actions">
+                <button id="btn-resume" class="btn-primary pause-action-primary" type="button">
+                  ▶ 秘密の棚へ戻る（再開）
+                </button>
+                <button id="btn-pause-craft" class="btn-upgrade-cta" type="button">
+                  🏠 部屋を育成する（時間保存室の強化）
+                </button>
+                <button id="btn-pause-settings" class="btn-secondary" type="button">
+                  ⚙ 音量・タイミング設定
+                </button>
+                <button id="btn-return-lobby" class="btn-lobby" type="button">
+                  ← タイトルへ戻る
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Result Modal -->
+        <div id="result-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="result-modal-title">
+          <div class="modal-card modal-result">
+            <div class="result-body">
+              <div class="result-head">
+                <div>
+                  <p class="pause-eyebrow">TONIGHT'S PRESERVATION COMPLETE</p>
+                  <h2 id="result-modal-title">そろそろ、すすめようか</h2>
+                  <p id="result-track-name" class="result-track">♪ トメルン — Dreamy Ver.</p>
+                </div>
+                <div id="result-rank" class="result-rank rank-s">S</div>
+              </div>
+
+              <div class="result-grid">
+                <div class="result-metric"><span>守った時間</span><strong id="res-moments">0件</strong></div>
+                <div class="result-metric"><span>のばした時間</span><strong id="res-seconds">0秒</strong></div>
+                <div class="result-metric"><span>オーダー達成</span><strong id="res-orders">0件</strong></div>
+                <div class="result-metric"><span>MAX COMBO</span><strong id="res-max-combo">0</strong></div>
+              </div>
+
+              <div class="result-rewards">
+                <div class="reward-pill">
+                  <span>集めた時の砂</span>
+                  <strong id="res-sands">+0</strong>
+                </div>
+                <div class="reward-pill">
+                  <span>宝物の時間瓶</span>
+                  <strong id="res-jars">+0</strong>
+                </div>
+              </div>
+
+              <div class="result-actions">
+                <button id="btn-retry" class="btn-primary result-action-primary" type="button">
+                  ⏳ もう一度、時間をすこし止める
+                </button>
+                <button id="btn-result-craft" class="btn-upgrade-cta" type="button">
+                  🏠 部屋を育成する <span id="result-craft-badge" class="upgrade-count-badge hidden">UP!</span>
+                </button>
+                <button id="btn-result-lobby" class="btn-lobby" type="button">
+                  ← タイトルへ
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Story Modal -->
+        <div id="story-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="story-modal-title">
+          <div class="modal-card modal-story">
+            <div class="modal-header">
+              <div>
+                <h2 id="story-modal-title">時間保存日誌 — 第九話『冷蔵庫の奥の時間保存士』</h2>
+                <p>羽ペンとノートの机を整えるか、大切な時間を保存することで物語がひらかれます</p>
+              </div>
+              <button id="btn-close-story" class="close-btn" type="button" aria-label="閉じる">✕</button>
+            </div>
+            <div id="story-list" class="story-list"></div>
+          </div>
+        </div>
+
+        <!-- Settings Modal -->
+        <div id="settings-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="settings-modal-title">
+          <div class="modal-card modal-settings">
+            <div class="modal-header">
+              <h2 id="settings-modal-title">時間保存室の設定</h2>
+              <button id="btn-close-settings" class="close-btn" type="button" aria-label="閉じる">✕</button>
+            </div>
+            <div class="settings-body">
+              <label class="setting-row">
+                <span>BGM 音量</span>
+                <input id="opt-bgm" type="range" min="0" max="100" value="72" />
+                <strong id="opt-bgm-val">72%</strong>
+              </label>
+              <label class="setting-row">
+                <span>効果音 音量</span>
+                <input id="opt-se" type="range" min="0" max="100" value="85" />
+                <strong id="opt-se-val">85%</strong>
+              </label>
+              <label class="setting-row">
+                <span>タイミング補正</span>
+                <input id="opt-offset" type="range" min="-150" max="150" step="5" value="0" />
+                <strong id="opt-offset-val">0ms</strong>
+              </label>
+              <hr class="settings-sep" />
+              <div class="settings-links">
+                <a class="portal-link-btn" href="./index.html">← 見えない隣人たち ポータルへ戻る</a>
+              </div>
+              <div class="settings-danger">
+                <button id="btn-reset-save" class="btn-danger" type="button">
+                  トメルンのセーブデータを初期化する
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Toast notifications -->
+        <div id="toast-container" class="toast-container" aria-live="polite"></div>
+      </div>
+    </div>
+
+    <script type="module" src="/src/tomerun/main.ts"></script>
+  </body>
+</html>
