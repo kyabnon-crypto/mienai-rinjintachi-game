@@ -92,6 +92,10 @@ body {
   box-shadow: 0 26px 60px rgba(0, 0, 0, 0.58);
 }
 
+.card-nukumori:hover {
+  border-color: rgba(255, 168, 122, 0.58);
+}
+
 .card-wasuredama:hover {
   border-color: rgba(168, 232, 158, 0.56);
 }
@@ -136,6 +140,10 @@ body {
   transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
+.card-nukumori .card-visual img {
+  object-position: center 56%;
+}
+
 .card-wasuredama .card-visual img {
   object-position: center 42%;
 }
@@ -173,6 +181,11 @@ body {
   background: rgba(10, 14, 28, 0.78);
   border: 1px solid rgba(255, 255, 255, 0.2);
   color: #fff3da;
+}
+
+.card-nukumori .episode-tag {
+  color: #ff9c86;
+  border-color: rgba(255, 156, 134, 0.58);
 }
 
 .card-wasuredama .episode-tag {
@@ -225,6 +238,10 @@ body {
   margin-top: 3px;
   font-size: 13px;
   font-weight: 700;
+}
+
+.card-nukumori .card-char {
+  color: #ff9c86;
 }
 
 .card-wasuredama .card-char {
@@ -282,6 +299,12 @@ body {
 .play-link:hover {
   transform: translateY(-1px);
   filter: brightness(1.06);
+}
+
+.play-nukumori {
+  background: linear-gradient(135deg, #ffba76, #e66452);
+  color: #240c08;
+  box-shadow: 0 8px 22px rgba(235, 114, 82, 0.4);
 }
 
 .play-wasuredama {

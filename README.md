@@ -6,7 +6,17 @@
 
 ## 収録タイトル
 
-### 04. 街灯の下のわすれ玉 〜ワスレダマ〜（NEW!）
+### 05. 自販機裏のぬくもり番 〜ヌクモリ〜（NEW!）
+- **ジャンル**：3D 真冬の自販機裏＆ベンチ温度番アクション（[`nukumori.html`](nukumori.html)）
+- **舞台**：凍える真冬の街角「古い自動販売機の裏の小屋『おんどばん』＆公園のベンチ広場」
+- **特徴**：
+  - リグ・アニメーション済み `nukumori.glb`（`Walking` / `Running`）＋正面が青白く光る自動販売機・裏面の放熱ファン＆煙突・動く真鍮ダイヤルの古い温度調整機・5本の赤い水銀温度計・だるまストーブ＆銅やかん・ほかほか缶ウォーマー・赤いマフラー・チェック柄毛布ベッド・白い息の小瓶棚・「おつかれさまです」マグカップ・4基の冬のベンチを3D空間で再現。
+  - 冷え込んでいく4つの公園ベンチ（自販機わき・公園ベンチ・並木道ベンチ・バス停ベンチ）をタップ / ドラッグ / WASD で見回り、そっと手を置いてじんわり適温へ温めよう。温め完了で帰り道のシルエットがほっと微笑み、5種のぬくもりの種を集めて「おつかれさまオーダー」や「あったか〜い缶ラック差し入れ」を達成！
+  - **湯気ウェーブ（STEAM WAVE）**で凍える北風を一斉融解して「白い息」へ変換＆4つのベンチを一気に保温。
+  - ゲージMAXで **POKAPOKA NIGHT（ぽかぽかの夜）**発動！真冬の雪が黄金の湯気雪に変わり、全北風がレア「ほっと星湯気」へ変化＆全ベンチ自動保温・ぬくもり2倍の極上フィーバー！
+  - 公式3アレンジ（`Dreamy Ver.` / `通常版` / `Instrumental` 各62秒ゲームサイズ）、6種類の温度番小屋設備強化（古い温度調整機・裸電球と吊り看板・だるまストーブと銅やかん・ほかほか缶ウォーマー・赤いマフラーと毛布のベッド・白い息の小瓶とマグカップが3D空間に反映）、物語『第五話：自動販売機の裏の温度番』全5章を収録。
+
+### 04. 街灯の下のわすれ玉 〜ワスレダマ〜
 - **ジャンル**：3D 夜の街角広場・わすれ玉回収＆そっとお届けアクション（[`wasuredama.html`](wasuredama.html)）
 - **舞台**：誰もいない夜の住宅街「街灯の下の落とし物置き場」
 - **特徴**：
@@ -75,17 +85,19 @@ npm run build
 
 ```text
 ├── index.html                  # 見えない隣人たち ゲーム選択ポータル
+├── nukumori.html               # 05. 自販機裏のぬくもり番 〜ヌクモリ〜
 ├── wasuredama.html             # 04. 街灯の下のわすれ玉 〜ワスレダマ〜
 ├── tokitsugi.html              # 03. 時繋ぎの懐中時計 〜トキツギ〜
 ├── susunomi.html               # 01. 記憶の香り鍋 〜ススノミ〜
 ├── kagemichi.html              # 02. 終電のランタン 〜カゲミチ〜
 ├── namidabin.html              # 12. 涙蔵のオルゴール 〜ナミダビン〜
 ├── public/assets/
-│   ├── models/                 # wasuredama.glb / tokitsugi.glb / susunomi.glb / kagemichi.glb / namidabin.glb
+│   ├── models/                 # nukumori.glb / wasuredama.glb / tokitsugi.glb / susunomi.glb / kagemichi.glb / namidabin.glb
 │   ├── audio/                  # 各キャラクター公式3バージョン（MP3）
 │   └── images/                 # ポータル用キャラクターサムネイル
 └── src/
     ├── portal.ts / portal.css  # 常世町ポータル
+    ├── nukumori/               # ヌクモリ 3D真冬の自販機裏＆ベンチ広場（scene/actor/system/audio/state/ui）
     ├── wasuredama/             # ワスレダマ 3D街灯の広場（scene/actor/system/audio/state/ui）
     ├── tokitsugi/              # トキツギ 3D押し入れ時計工房（scene/actor/system/audio/state/ui）
     ├── susunomi/               # ススノミ 3D換気口キッチン（scene/actor/system/audio/state/ui）

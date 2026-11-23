@@ -13,6 +13,7 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: resolve(__dirname, 'index.html'),
+        nukumori: resolve(__dirname, 'nukumori.html'),
         wasuredama: resolve(__dirname, 'wasuredama.html'),
         susunomi: resolve(__dirname, 'susunomi.html'),
         tokitsugi: resolve(__dirname, 'tokitsugi.html'),

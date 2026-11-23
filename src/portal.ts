@@ -1,6 +1,26 @@
 import './portal.css';
 
 function renderSaveProgress(): void {
+  const nkEl = document.getElementById('prog-nukumori');
+  if (nkEl) {
+    try {
+      const raw = localStorage.getItem('mienai_nukumori_v1');
+      if (raw) {
+        const st = JSON.parse(raw);
+        const totalLv = Object.values(st.upgrades || {}).reduce(
+          (a: number, b: unknown) => a + (typeof b === 'number' ? b : 0),
+          0
+        );
+        const rank = 1 + Math.floor(totalLv / 2);
+        const bottles = Number(st.bottles || 0);
+        const warmed = Number(st.totalBenchesWarmed || 0);
+        nkEl.textContent = `温度番小屋 Lv.${rank} ・ 白い息の小瓶 ${bottles} ・ ベンチ温め ${warmed}回`;
+      }
+    } catch {
+      // Ignore parse errors
+    }
+  }
+
   const wsEl = document.getElementById('prog-wasuredama');
   if (wsEl) {
     try {
