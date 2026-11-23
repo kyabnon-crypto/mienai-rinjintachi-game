@@ -1,6 +1,26 @@
 import './portal.css';
 
 function renderSaveProgress(): void {
+  const ayEl = document.getElementById('prog-ashitayobi');
+  if (ayEl) {
+    try {
+      const raw = localStorage.getItem('mienai_ashitayobi_v1');
+      if (raw) {
+        const st = JSON.parse(raw);
+        const totalLv = Object.values(st.upgrades || {}).reduce(
+          (a: number, b: unknown) => a + (typeof b === 'number' ? b : 0),
+          0
+        );
+        const rank = 1 + Math.floor(totalLv / 2);
+        const bottles = Number(st.bottles || 0);
+        const delivered = Number(st.totalMorningsDelivered || 0);
+        ayEl.textContent = `朝焼け配達所 Lv.${rank} ・ あしたの小瓶 ${bottles} ・ 配達 ${delivered}回`;
+      }
+    } catch {
+      // Ignore parse errors
+    }
+  }
+
   const ymEl = document.getElementById('prog-yumeatsume');
   if (ymEl) {
     try {

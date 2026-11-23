@@ -92,6 +92,10 @@ body {
   box-shadow: 0 26px 60px rgba(0, 0, 0, 0.58);
 }
 
+.card-ashitayobi:hover {
+  border-color: rgba(255, 178, 108, 0.82);
+}
+
 .card-yumeatsume:hover {
   border-color: rgba(157, 232, 212, 0.78);
 }
@@ -164,6 +168,10 @@ body {
   transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
+.card-ashitayobi .card-visual img {
+  object-position: center 36%;
+}
+
 .card-yumeatsume .card-visual img {
   object-position: center 40%;
 }
@@ -229,6 +237,11 @@ body {
   background: rgba(10, 14, 28, 0.78);
   border: 1px solid rgba(255, 255, 255, 0.2);
   color: #fff3da;
+}
+
+.card-ashitayobi .episode-tag {
+  color: #ffc888;
+  border-color: rgba(255, 178, 108, 0.78);
 }
 
 .card-yumeatsume .episode-tag {
@@ -318,6 +331,10 @@ body {
   font-weight: 700;
 }
 
+.card-ashitayobi .card-char {
+  color: #ffc482;
+}
+
 .card-yumeatsume .card-char {
   color: #a6f2de;
 }
@@ -401,6 +418,12 @@ body {
 .play-link:hover {
   transform: translateY(-1px);
   filter: brightness(1.06);
+}
+
+.play-ashitayobi {
+  background: linear-gradient(135deg, #ffa058, #ff98be 50%, #ffe078);
+  color: #201216;
+  box-shadow: 0 8px 24px rgba(255, 168, 96, 0.46);
 }
 
 .play-yumeatsume {
