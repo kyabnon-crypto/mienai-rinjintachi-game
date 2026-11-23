@@ -92,6 +92,10 @@ body {
   box-shadow: 0 26px 60px rgba(0, 0, 0, 0.58);
 }
 
+.card-henjiro:hover {
+  border-color: rgba(242, 148, 128, 0.62);
+}
+
 .card-nukumori:hover {
   border-color: rgba(255, 168, 122, 0.58);
 }
@@ -140,6 +144,10 @@ body {
   transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
+.card-henjiro .card-visual img {
+  object-position: center 62%;
+}
+
 .card-nukumori .card-visual img {
   object-position: center 56%;
 }
@@ -181,6 +189,11 @@ body {
   background: rgba(10, 14, 28, 0.78);
   border: 1px solid rgba(255, 255, 255, 0.2);
   color: #fff3da;
+}
+
+.card-henjiro .episode-tag {
+  color: #f6a496;
+  border-color: rgba(246, 164, 150, 0.6);
 }
 
 .card-nukumori .episode-tag {
@@ -238,6 +251,10 @@ body {
   margin-top: 3px;
   font-size: 13px;
   font-weight: 700;
+}
+
+.card-henjiro .card-char {
+  color: #f6a496;
 }
 
 .card-nukumori .card-char {
@@ -299,6 +316,12 @@ body {
 .play-link:hover {
   transform: translateY(-1px);
   filter: brightness(1.06);
+}
+
+.play-henjiro {
+  background: linear-gradient(135deg, #f2b27a, #cf463c);
+  color: #260b09;
+  box-shadow: 0 8px 22px rgba(214, 78, 66, 0.42);
 }
 
 .play-nukumori {

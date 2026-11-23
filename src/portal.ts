@@ -1,6 +1,26 @@
 import './portal.css';
 
 function renderSaveProgress(): void {
+  const hjEl = document.getElementById('prog-henjiro');
+  if (hjEl) {
+    try {
+      const raw = localStorage.getItem('mienai_henjiro_v1');
+      if (raw) {
+        const st = JSON.parse(raw);
+        const totalLv = Object.values(st.upgrades || {}).reduce(
+          (a: number, b: unknown) => a + (typeof b === 'number' ? b : 0),
+          0
+        );
+        const rank = 1 + Math.floor(totalLv / 2);
+        const seals = Number(st.seals || 0);
+        const replies = Number(st.totalRepliesSent || 0);
+        hjEl.textContent = `ポスト書斎 Lv.${rank} ・ 心の手紙 ${seals} ・ 届けた返事 ${replies}通`;
+      }
+    } catch {
+      // Ignore parse errors
+    }
+  }
+
   const nkEl = document.getElementById('prog-nukumori');
   if (nkEl) {
     try {

@@ -6,7 +6,17 @@
 
 ## 収録タイトル
 
-### 05. 自販機裏のぬくもり番 〜ヌクモリ〜（NEW!）
+### 06. ポストの中の返事書き 〜ヘンジロウ〜（NEW!）
+- **ジャンル**：3D 赤いポストの書斎・手紙伸ばし＆封蝋返事書きアクション（[`henjiro.html`](henjiro.html)）
+- **舞台**：月あかりの夜、町角に立つ「赤いポストの内側の小さな書斎」
+- **特徴**：
+  - リグ・アニメーション済み `henjiro.glb`（`Walking` / `Running`）＋赤い円筒ポストの書斎・開いた扉の手紙メモ・深緑の腰板＆真鍮モールディング・寄木細工の床＆丸絨毯・天井投函口から落ちる月あかりの柱・羽ペン＆インク壺の木の机・物干しの紐の手紙・丸い窓の夜の町並み・封蝋と切手の棚・本棚・壁時計・肘掛け椅子・鉢植え・電球ガーランドを3D空間で再現。
+  - 天井の投函口からひらひら舞い降りる5種の「届かなかった言葉」（ごめんね・ありがとう・本当は、好きでした・またね・だいじょうぶ）をタップ / ドラッグ / WASD でそっと伸ばして集め、4つの執筆スポットでカリカリッと返事を書き上げ、赤い封蝋で丸窓の向こうの誰かの心へ届けよう。
+  - **羽ペンひとふり（QUILL FLOURISH）**で周囲の「ためらいのインク染み」を一斉浄化＆全4スポットを一気に書き進め＆近くのくしゃくしゃ手紙を一斉回収。
+  - ゲージMAXで **MOONLIGHT REPLY（月あかりの返事時間）**発動！満月の光が書斎いっぱいに差し込み、全インク染みがレア「だいじょうぶの星封蝋レター」へ変化＆手紙自動吸引＆灯り2倍の極上フィーバー！
+  - 公式3アレンジ（`Dreamy Ver.` / `通常版` / `Instrumental` 各62秒ゲームサイズ）、6種類のポスト書斎設備強化（羽ペンとインク壺の机・天井ランプと電球ガーランド・物干しの紐と木製クリップ・封蝋と切手の棚・丸メガネと小さな帽子＆肘掛け椅子・本棚と額縁・丸い窓が3D空間に反映）、物語『第六話：ポストの中の返事書き』全5章を収録。
+
+### 05. 自販機裏のぬくもり番 〜ヌクモリ〜
 - **ジャンル**：3D 真冬の自販機裏＆ベンチ温度番アクション（[`nukumori.html`](nukumori.html)）
 - **舞台**：凍える真冬の街角「古い自動販売機の裏の小屋『おんどばん』＆公園のベンチ広場」
 - **特徴**：
@@ -85,6 +95,7 @@ npm run build
 
 ```text
 ├── index.html                  # 見えない隣人たち ゲーム選択ポータル
+├── henjiro.html                # 06. ポストの中の返事書き 〜ヘンジロウ〜
 ├── nukumori.html               # 05. 自販機裏のぬくもり番 〜ヌクモリ〜
 ├── wasuredama.html             # 04. 街灯の下のわすれ玉 〜ワスレダマ〜
 ├── tokitsugi.html              # 03. 時繋ぎの懐中時計 〜トキツギ〜
@@ -92,11 +103,12 @@ npm run build
 ├── kagemichi.html              # 02. 終電のランタン 〜カゲミチ〜
 ├── namidabin.html              # 12. 涙蔵のオルゴール 〜ナミダビン〜
 ├── public/assets/
-│   ├── models/                 # nukumori.glb / wasuredama.glb / tokitsugi.glb / susunomi.glb / kagemichi.glb / namidabin.glb
+│   ├── models/                 # henjiro.glb / nukumori.glb / wasuredama.glb / tokitsugi.glb / susunomi.glb / kagemichi.glb / namidabin.glb
 │   ├── audio/                  # 各キャラクター公式3バージョン（MP3）
 │   └── images/                 # ポータル用キャラクターサムネイル
 └── src/
     ├── portal.ts / portal.css  # 常世町ポータル
+    ├── henjiro/                # ヘンジロウ 3D赤いポストの書斎（scene/actor/system/audio/state/ui）
     ├── nukumori/               # ヌクモリ 3D真冬の自販機裏＆ベンチ広場（scene/actor/system/audio/state/ui）
     ├── wasuredama/             # ワスレダマ 3D街灯の広場（scene/actor/system/audio/state/ui）
     ├── tokitsugi/              # トキツギ 3D押し入れ時計工房（scene/actor/system/audio/state/ui）
