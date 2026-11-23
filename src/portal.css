@@ -92,6 +92,10 @@ body {
   box-shadow: 0 26px 60px rgba(0, 0, 0, 0.58);
 }
 
+.card-hoshihakobi:hover {
+  border-color: rgba(255, 224, 138, 0.76);
+}
+
 .card-tomerun:hover {
   border-color: rgba(152, 220, 255, 0.72);
 }
@@ -156,6 +160,10 @@ body {
   transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
+.card-hoshihakobi .card-visual img {
+  object-position: center 44%;
+}
+
 .card-tomerun .card-visual img {
   object-position: center 42%;
 }
@@ -213,6 +221,11 @@ body {
   background: rgba(10, 14, 28, 0.78);
   border: 1px solid rgba(255, 255, 255, 0.2);
   color: #fff3da;
+}
+
+.card-hoshihakobi .episode-tag {
+  color: #ffe698;
+  border-color: rgba(255, 224, 138, 0.72);
 }
 
 .card-tomerun .episode-tag {
@@ -292,6 +305,10 @@ body {
   font-weight: 700;
 }
 
+.card-hoshihakobi .card-char {
+  color: #ffe698;
+}
+
 .card-tomerun .card-char {
   color: #a6e2ff;
 }
@@ -367,6 +384,12 @@ body {
 .play-link:hover {
   transform: translateY(-1px);
   filter: brightness(1.06);
+}
+
+.play-hoshihakobi {
+  background: linear-gradient(135deg, #a6d2ff, #5684d6 48%, #f4c85c);
+  color: #0b142c;
+  box-shadow: 0 8px 24px rgba(126, 174, 246, 0.46);
 }
 
 .play-tomerun {

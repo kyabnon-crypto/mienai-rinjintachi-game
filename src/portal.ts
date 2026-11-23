@@ -1,6 +1,26 @@
 import './portal.css';
 
 function renderSaveProgress(): void {
+  const hsEl = document.getElementById('prog-hoshihakobi');
+  if (hsEl) {
+    try {
+      const raw = localStorage.getItem('mienai_hoshihakobi_v1');
+      if (raw) {
+        const st = JSON.parse(raw);
+        const totalLv = Object.values(st.upgrades || {}).reduce(
+          (a: number, b: unknown) => a + (typeof b === 'number' ? b : 0),
+          0
+        );
+        const rank = 1 + Math.floor(totalLv / 2);
+        const miracles = Number(st.miracles || 0);
+        const constellations = Number(st.totalMiraclesSent || 0);
+        hsEl.textContent = `星の工房 Lv.${rank} ・ 奇跡の流星 ${miracles} ・ 星座 ${constellations}座`;
+      }
+    } catch {
+      // Ignore parse errors
+    }
+  }
+
   const trEl = document.getElementById('prog-tomerun');
   if (trEl) {
     try {
