@@ -6,7 +6,17 @@
 
 ## 収録タイトル
 
-### 06. ポストの中の返事書き 〜ヘンジロウ〜（NEW!）
+### 07. 踊り場のひと秒 〜ツマヅキ〜（NEW!）
+- **ジャンル**：3D 朝の階段の踊り場・時間スロー＆ひやり救出アクション（[`tsumazuki.html`](tsumazuki.html)）
+- **舞台**：朝の光が差し込むマンションの「階段の踊り場＆階段裏の見張り部屋」
+- **特徴**：
+  - リグ・アニメーション済み `tsumazuki.glb`（`Walking` / `Running`）＋朝の空と光の柱が差し込むアーチ窓・青緑＆金糸の丸い絨毯・上り下りの階段と真鍮滑り止め＆木製手すり・階段裏の小さな青緑の扉とのぞき窓・のこぎり状の階段裏梁・落とし物の棚＆鍵フックボード・止まりかけの振り子時計・青緑フードマント・窓辺のクッション＆チェック毛布・手すり模型＆見張り日誌・階段の青写真・壁のメモ「だいじょうぶ。」を3D空間で再現。
+  - 朝の急ぎ足の階段で宙に落ちかけた5種の小物（落ちかけたコップ・302号室のかぎ束・紙ひこうき・ころがるコイン＆ボタン・ひと秒の懐中時計）をタップ / ドラッグ / WASD でキャッチし、4つの「ひやりスポット」でつまずきそうな住人に寄り添って時間をゆっくりにし、安全に踏みとどまらせよう。
+  - **ほんのひと秒（TIME SLOW）**で2.2秒間、空間全体の時間（振り子時計・落ちかけた物・あわて渦・ひやり進行）をスローモーション化＆周囲の「あわて足」を一斉浄化＆近くの落とし物を一斉キャッチ＆全4スポットを落ち着かせる爽快アクション！
+  - ゲージMAXで **SLOW SECOND（ひと秒のきせき）**発動！朝の光が踊り場に満ち、全あわて渦がレア「ひと秒の懐中時計」へ変化＆自動吸引＆全スポット自動見守り＆時のしずく2倍の極上フィーバー！
+  - 公式3アレンジ（`Dreamy Ver.` / `通常版` / `Instrumental` 各62秒ゲームサイズ）、6種類の見張り部屋設備強化（光る砂時計・アーチ窓＆電球ガーランド・落とし物の棚＆鍵フック・止まりかけの振り子時計＆手すり模型・青緑フードマント＆クッション・見張り日誌＆青写真が3D空間に反映）、物語『第七話：階段の踊り場の見張り番』全5章を収録。
+
+### 06. ポストの中の返事書き 〜ヘンジロウ〜
 - **ジャンル**：3D 赤いポストの書斎・手紙伸ばし＆封蝋返事書きアクション（[`henjiro.html`](henjiro.html)）
 - **舞台**：月あかりの夜、町角に立つ「赤いポストの内側の小さな書斎」
 - **特徴**：
@@ -95,6 +105,7 @@ npm run build
 
 ```text
 ├── index.html                  # 見えない隣人たち ゲーム選択ポータル
+├── tsumazuki.html              # 07. 踊り場のひと秒 〜ツマヅキ〜
 ├── henjiro.html                # 06. ポストの中の返事書き 〜ヘンジロウ〜
 ├── nukumori.html               # 05. 自販機裏のぬくもり番 〜ヌクモリ〜
 ├── wasuredama.html             # 04. 街灯の下のわすれ玉 〜ワスレダマ〜
@@ -103,11 +114,12 @@ npm run build
 ├── kagemichi.html              # 02. 終電のランタン 〜カゲミチ〜
 ├── namidabin.html              # 12. 涙蔵のオルゴール 〜ナミダビン〜
 ├── public/assets/
-│   ├── models/                 # henjiro.glb / nukumori.glb / wasuredama.glb / tokitsugi.glb / susunomi.glb / kagemichi.glb / namidabin.glb
+│   ├── models/                 # tsumazuki.glb / henjiro.glb / nukumori.glb / wasuredama.glb / tokitsugi.glb / susunomi.glb / kagemichi.glb / namidabin.glb
 │   ├── audio/                  # 各キャラクター公式3バージョン（MP3）
 │   └── images/                 # ポータル用キャラクターサムネイル
 └── src/
     ├── portal.ts / portal.css  # 常世町ポータル
+    ├── tsumazuki/              # ツマヅキ 3D朝の階段の踊り場＆見張り部屋（scene/actor/system/audio/state/ui）
     ├── henjiro/                # ヘンジロウ 3D赤いポストの書斎（scene/actor/system/audio/state/ui）
     ├── nukumori/               # ヌクモリ 3D真冬の自販機裏＆ベンチ広場（scene/actor/system/audio/state/ui）
     ├── wasuredama/             # ワスレダマ 3D街灯の広場（scene/actor/system/audio/state/ui）

@@ -1,6 +1,26 @@
 import './portal.css';
 
 function renderSaveProgress(): void {
+  const tmEl = document.getElementById('prog-tsumazuki');
+  if (tmEl) {
+    try {
+      const raw = localStorage.getItem('mienai_tsumazuki_v1');
+      if (raw) {
+        const st = JSON.parse(raw);
+        const totalLv = Object.values(st.upgrades || {}).reduce(
+          (a: number, b: unknown) => a + (typeof b === 'number' ? b : 0),
+          0
+        );
+        const rank = 1 + Math.floor(totalLv / 2);
+        const charms = Number(st.charms || 0);
+        const saves = Number(st.totalSaves || 0);
+        tmEl.textContent = `見張り部屋 Lv.${rank} ・ だいじょうぶの証 ${charms} ・ ひやり防止 ${saves}回`;
+      }
+    } catch {
+      // Ignore parse errors
+    }
+  }
+
   const hjEl = document.getElementById('prog-henjiro');
   if (hjEl) {
     try {
