@@ -1,6 +1,26 @@
 import './portal.css';
 
 function renderSaveProgress(): void {
+  const ymEl = document.getElementById('prog-yumeatsume');
+  if (ymEl) {
+    try {
+      const raw = localStorage.getItem('mienai_yumeatsume_v1');
+      if (raw) {
+        const st = JSON.parse(raw);
+        const totalLv = Object.values(st.upgrades || {}).reduce(
+          (a: number, b: unknown) => a + (typeof b === 'number' ? b : 0),
+          0
+        );
+        const rank = 1 + Math.floor(totalLv / 2);
+        const jars = Number(st.jars || 0);
+        const returned = Number(st.totalDreamsReturned || 0);
+        ymEl.textContent = `夢の保管庫 Lv.${rank} ・ おかえりの瓶 ${jars} ・ 目覚め ${returned}個`;
+      }
+    } catch {
+      // Ignore parse errors
+    }
+  }
+
   const hsEl = document.getElementById('prog-hoshihakobi');
   if (hsEl) {
     try {

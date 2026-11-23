@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+    />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="theme-color" content="#070d1a" />
+    <link rel="manifest" href="./manifest.json" />
+    <meta
+      name="description"
+      content="見えない隣人たち — 常世町の西の丘に灯るガラスの温室「夢の保管庫」で、ユメアツメとこぼれた夢の光を集めてガラス瓶を目覚めさせ、「おかえり」と持ち主へ届ける3D WebGLアクション"
+    />
+    <title>夢の保管庫のガラス瓶 〜ユメアツメ〜 | 見えない隣人たち</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700&family=Zen+Maru+Gothic:wght@500;700;900&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div id="app">
+      <canvas id="game-canvas" aria-label="夢の保管庫のガラス瓶 3Dガラス温室"></canvas>
+      <canvas id="fx-canvas" aria-hidden="true"></canvas>
+      <div id="floating-layer" aria-hidden="true"></div>
+
+      <!-- Title / Lobby overlay -->
+      <section id="title-screen" class="overlay-screen">
+        <div class="title-card">
+          <p class="title-eyebrow">見えない隣人たち — 第十一話 プレイアブル</p>
+          <h1 class="title-main">夢の保管庫のガラス瓶</h1>
+          <p class="title-sub">〜 夢の保管庫の管理人 ユメアツメ 〜</p>
+          <p class="title-lead">
+            常世町の西の丘に灯る、大きなガラスの温室「夢の保管庫」。<br />
+            誰かが諦めた夢の光をそっと拾い上げ、「おかえり」とふたを開けて未来へ送り出そう。
+          </p>
+          <button id="btn-start" class="btn-primary" type="button">
+            <span class="btn-glow-dot"></span>
+            夜の丘の夢の保管庫へ入る
+          </button>
+          <p class="title-hint">
+            起動時に自動で横画面表示 ・ タップ / ドラッグ / WASD で移動＆夢の目覚め ・ 🏺 / Space で「おかえり」ふた開け ・ 音声ON推奨
+          </p>
+          <div id="loading-status" class="loading-status">3Dモデルと楽曲を準備しています…</div>
+          <a href="./index.html" class="portal-back-link">← 見えない隣人たち 一覧へもどる</a>
+        </div>
+      </section>
+
+      <!-- Main HUD -->
+      <div id="hud" class="hud hidden">
+        <div class="song-progress-track" aria-hidden="true">
+          <div id="song-progress-fill" class="song-progress-fill"></div>
+        </div>
+
+        <header class="hud-top">
+          <div class="hud-top-left">
+            <button id="btn-room-rank" class="room-badge room-badge-btn" type="button" title="クリックで夢の保管庫の育成を開く">
+              <span class="room-rank-label">夢の保管庫</span>
+              <strong id="hud-room-rank">Lv.1</strong>
+              <span class="rank-up-hint">▲育成</span>
+            </button>
+            <div class="resource-pill" title="夢のしずく">
+              <span class="res-icon res-drops"></span>
+              <div class="res-meta">
+                <span class="res-label">夢のしずく</span>
+                <strong id="hud-drops">0</strong>
+              </div>
+            </div>
+            <div class="resource-pill" title="おかえりの瓶">
+              <span class="res-icon res-jars"></span>
+              <div class="res-meta">
+                <span class="res-label">おかえりの瓶</span>
+                <strong id="hud-jars">0</strong>
+              </div>
+            </div>
+            <div class="shield-pill" title="綿菓子のやすらぎ（ため息の霧防御）">
+              <span class="shield-label">やすらぎ</span>
+              <span id="hud-shields" class="shield-marks">―</span>
+            </div>
+          </div>
+
+          <div class="hud-top-right">
+            <div class="time-pill" title="楽曲の残り時間">
+              <span class="time-dot"></span>
+              <strong id="hud-time-left">1:02</strong>
+            </div>
+            <div class="track-switcher" role="group" aria-label="楽曲バージョン切替">
+              <button class="track-btn active" data-track="dreamy" type="button">
+                🌙 Dreamy
+              </button>
+              <button class="track-btn" data-track="normal" type="button">
+                🎸 通常版
+              </button>
+              <button class="track-btn" data-track="instrumental" type="button">
+                🎹 Inst
+              </button>
+            </div>
+            <button id="btn-story" class="icon-btn" type="button" title="受け取りのノート（物語）">
+              📖 <span id="story-badge" class="notif-dot hidden"></span>
+            </button>
+            <button id="btn-craft" class="icon-btn craft-toggle" type="button" title="部屋の育成（夢の保管庫）">
+              🏠 部屋の育成 <span id="craft-badge" class="upgrade-count-badge hidden">UP!</span>
+            </button>
+            <button id="btn-settings" class="icon-btn" type="button" title="設定">⚙</button>
+            <button id="btn-pause" class="icon-btn pause-btn" type="button" title="一時停止（Esc / P）" aria-label="一時停止">
+              ⏸
+            </button>
+          </div>
+        </header>
+
+        <!-- Center Top: Active Dream Return Order + NO EXPIRATION Fever Banner + Combo -->
+        <div class="hud-center-top">
+          <div id="order-card" class="order-card" aria-label="今夜のおかえりリクエスト">
+            <div class="order-head">
+              <span class="order-tag">今夜のおかえりリクエスト</span>
+              <strong id="order-name" class="order-name">二十年前の古いギターの夢、おかえり</strong>
+            </div>
+            <div id="order-slots" class="order-slots"></div>
+          </div>
+
+          <div id="fever-banner" class="fever-banner hidden">
+            <span class="fever-title">NO EXPIRATION — 賞味期限のない夜</span>
+            <span id="fever-timer" class="fever-timer">14.0s</span>
+          </div>
+
+          <div id="combo-display" class="combo-display hidden">
+            <strong id="combo-count">0</strong>
+            <span class="combo-word">COMBO</span>
+            <span id="combo-mult" class="combo-mult">×1.00</span>
+          </div>
+        </div>
+
+        <!-- Left-side Quick Room Upgrade Action Button -->
+        <div class="touch-room-actions" aria-label="部屋の育成ショートカット">
+          <button id="btn-room-quick" class="room-action-btn" type="button" aria-label="部屋の育成を開く">
+            <span id="room-quick-badge" class="room-quick-badge hidden">強化OK</span>
+            <span class="room-btn-icon">🏠</span>
+            <span class="room-btn-text">部屋育成</span>
+            <span class="room-btn-sub">夢の保管庫</span>
+          </button>
+        </div>
+
+        <!-- Right-side "おかえり" LID OPEN Action Button -->
+        <div class="touch-actions" aria-label="おかえりふた開けアクション">
+          <button id="ctrl-lidopen" class="lid-action-btn ready" type="button" aria-label="おかえりとガラス瓶のふたを開ける">
+            <span class="lid-icon">🏺</span>
+            <span class="lid-text">おかえり</span>
+            <span class="lid-sub">霧晴れ＆全瓶＋</span>
+            <span class="lid-cd-track"><span id="lidopen-cd-fill" class="lid-cd-fill"></span></span>
+          </button>
+        </div>
+
+        <footer class="hud-bottom">
+          <!-- Left: Leather Satchel ("夢の瓶を入れる鞄") Progress -->
+          <div class="satchel-panel">
+            <div class="satchel-visual">
+              <div class="satchel-meter-mini">
+                <div id="satchel-fill" class="satchel-fill"></div>
+              </div>
+              <span id="satchel-pct" class="satchel-pct">0%</span>
+            </div>
+            <div class="satchel-info">
+              <div class="satchel-title-row">
+                <span class="satchel-name">夢の瓶を入れる鞄</span>
+                <span id="satchel-count" class="satchel-count">0 / 12</span>
+              </div>
+              <button id="btn-store-satchel" class="btn-store-satchel" type="button" disabled>
+                夢の鞄に収集中 (0/12)
+              </button>
+            </div>
+          </div>
+
+          <!-- Center: Beat Pulse & NO EXPIRATION Gauge -->
+          <div class="beat-center-panel">
+            <div class="beat-dots" aria-hidden="true">
+              <span class="beat-dot" data-beat="0"></span>
+              <span class="beat-dot" data-beat="1"></span>
+              <span class="beat-dot" data-beat="2"></span>
+              <span class="beat-dot" data-beat="3"></span>
+            </div>
+            <div class="fever-bar-wrap">
+              <div class="fever-bar-track">
+                <div id="fever-bar-fill" class="fever-bar-fill"></div>
+              </div>
+              <button id="btn-fever" class="btn-fever" type="button" disabled>
+                夢の保管庫の光 0%
+              </button>
+            </div>
+          </div>
+
+          <!-- Right: Now Playing & Hint -->
+          <div class="quick-hint-panel">
+            <div id="now-playing" class="now-playing">♪ ユメアツメ — Dreamy Ver.</div>
+            <div class="hint-line">夢の光を集め4つの保管瓶を目覚めさせよう ・ 🏺 / Space で「おかえり」</div>
+          </div>
+        </footer>
+
+        <!-- Right Collapsible Room Upgrade Drawer -->
+        <aside id="craft-drawer" class="side-drawer hidden" aria-label="部屋の育成（夢の保管庫）">
+          <div class="drawer-header">
+            <div>
+              <h2>🏠 部屋の育成（夢の保管庫）</h2>
+              <p>ガラス温室を整えると3Dの作業台・天蓋オーブ・革鞄・移動はしご・綿菓子とつる草・受け取り机が輝き、夢のしずくも増えます</p>
+            </div>
+            <button id="btn-close-craft" class="close-btn" type="button" aria-label="閉じる">✕</button>
+          </div>
+          <div id="craft-list" class="craft-list"></div>
+        </aside>
+
+        <!-- Pause Modal -->
+        <div id="pause-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="pause-modal-title">
+          <div class="modal-card modal-pause">
+            <div class="pause-body">
+              <p class="pause-eyebrow">PAUSED</p>
+              <h2 id="pause-modal-title">綿菓子を食べてひとやすみ</h2>
+              <p class="pause-sub">進行状況は自動で保存されています</p>
+              <div class="pause-stats">
+                <div class="pause-stat">
+                  <span>現在のコンボ</span>
+                  <strong id="pause-stat-combo">0</strong>
+                </div>
+                <div class="pause-stat">
+                  <span>夢のしずく</span>
+                  <strong id="pause-stat-drops">0</strong>
+                </div>
+                <div class="pause-stat">
+                  <span>おかえりの瓶</span>
+                  <strong id="pause-stat-jars">0</strong>
+                </div>
+              </div>
+              <div class="pause-actions">
+                <button id="btn-resume" class="btn-primary pause-action-primary" type="button">
+                  ▶ 夢の保管庫へ戻る（再開）
+                </button>
+                <button id="btn-pause-craft" class="btn-upgrade-cta" type="button">
+                  🏠 部屋を育成する（夢の保管庫の強化）
+                </button>
+                <button id="btn-pause-settings" class="btn-secondary" type="button">
+                  ⚙ 音量・タイミング設定
+                </button>
+                <button id="btn-return-lobby" class="btn-lobby" type="button">
+                  ← タイトルへ戻る
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Result Modal -->
+        <div id="result-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="result-modal-title">
+          <div class="modal-card modal-result">
+            <div class="result-body">
+              <div class="result-head">
+                <div>
+                  <p class="pause-eyebrow">TONIGHT'S DREAM KEEPING COMPLETE</p>
+                  <h2 id="result-modal-title">夢には、賞味期限なんてないよ</h2>
+                  <p id="result-track-name" class="result-track">♪ ユメアツメ — Dreamy Ver.</p>
+                </div>
+                <div id="result-rank" class="result-rank rank-s">S</div>
+              </div>
+
+              <div class="result-grid">
+                <div class="result-metric"><span>目覚めた夢</span><strong id="res-awakened">0個</strong></div>
+                <div class="result-metric"><span>開いたガラス瓶</span><strong id="res-lids">0本</strong></div>
+                <div class="result-metric"><span>リクエスト達成</span><strong id="res-orders">0件</strong></div>
+                <div class="result-metric"><span>MAX COMBO</span><strong id="res-max-combo">0</strong></div>
+              </div>
+
+              <div class="result-rewards">
+                <div class="reward-pill">
+                  <span>集めた夢のしずく</span>
+                  <strong id="res-drops">+0</strong>
+                </div>
+                <div class="reward-pill">
+                  <span>おかえりの瓶</span>
+                  <strong id="res-jars">+0</strong>
+                </div>
+              </div>
+
+              <div class="result-actions">
+                <button id="btn-retry" class="btn-primary result-action-primary" type="button">
+                  🏺 もう一度、夜の夢を集める
+                </button>
+                <button id="btn-result-craft" class="btn-upgrade-cta" type="button">
+                  🏠 部屋を育成する <span id="result-craft-badge" class="upgrade-count-badge hidden">UP!</span>
+                </button>
+                <button id="btn-result-lobby" class="btn-lobby" type="button">
+                  ← タイトルへ
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Story Modal -->
+        <div id="story-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="story-modal-title">
+          <div class="modal-card modal-story">
+            <div class="modal-header">
+              <div>
+                <h2 id="story-modal-title">受け取りのノート — 第十一話『夢の保管庫の管理人』</h2>
+                <p>受け取りのノートと羽ペン机を整えるか、保管瓶の夢を目覚めさせると物語がひらかれます</p>
+              </div>
+              <button id="btn-close-story" class="close-btn" type="button" aria-label="閉じる">✕</button>
+            </div>
+            <div id="story-list" class="story-list"></div>
+          </div>
+        </div>
+
+        <!-- Settings Modal -->
+        <div id="settings-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="settings-modal-title">
+          <div class="modal-card modal-settings">
+            <div class="modal-header">
+              <h2 id="settings-modal-title">夢の保管庫の設定</h2>
+              <button id="btn-close-settings" class="close-btn" type="button" aria-label="閉じる">✕</button>
+            </div>
+            <div class="settings-body">
+              <label class="setting-row">
+                <span>BGM 音量</span>
+                <input id="opt-bgm" type="range" min="0" max="100" value="72" />
+                <strong id="opt-bgm-val">72%</strong>
+              </label>
+              <label class="setting-row">
+                <span>効果音 音量</span>
+                <input id="opt-se" type="range" min="0" max="100" value="85" />
+                <strong id="opt-se-val">85%</strong>
+              </label>
+              <label class="setting-row">
+                <span>タイミング補正</span>
+                <input id="opt-offset" type="range" min="-150" max="150" step="5" value="0" />
+                <strong id="opt-offset-val">0ms</strong>
+              </label>
+              <hr class="settings-sep" />
+              <div class="settings-links">
+                <a class="portal-link-btn" href="./index.html">← 見えない隣人たち ポータルへ戻る</a>
+              </div>
+              <div class="settings-danger">
+                <button id="btn-reset-save" class="btn-danger" type="button">
+                  ユメアツメのセーブデータを初期化する
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Toast notifications -->
+        <div id="toast-container" class="toast-container" aria-live="polite"></div>
+      </div>
+    </div>
+
+    <script type="module" src="/src/yumeatsume/main.ts"></script>
+  </body>
+</html>
