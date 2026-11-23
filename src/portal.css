@@ -92,6 +92,10 @@ body {
   box-shadow: 0 26px 60px rgba(0, 0, 0, 0.58);
 }
 
+.card-kazoeru:hover {
+  border-color: rgba(255, 214, 132, 0.68);
+}
+
 .card-tsumazuki:hover {
   border-color: rgba(142, 232, 214, 0.64);
 }
@@ -148,6 +152,10 @@ body {
   transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
+.card-kazoeru .card-visual img {
+  object-position: center 46%;
+}
+
 .card-tsumazuki .card-visual img {
   object-position: center 45%;
 }
@@ -197,6 +205,11 @@ body {
   background: rgba(10, 14, 28, 0.78);
   border: 1px solid rgba(255, 255, 255, 0.2);
   color: #fff3da;
+}
+
+.card-kazoeru .episode-tag {
+  color: #ffe096;
+  border-color: rgba(255, 214, 132, 0.65);
 }
 
 .card-tsumazuki .episode-tag {
@@ -266,6 +279,10 @@ body {
   font-weight: 700;
 }
 
+.card-kazoeru .card-char {
+  color: #ffe096;
+}
+
 .card-tsumazuki .card-char {
   color: #9cf2e2;
 }
@@ -333,6 +350,12 @@ body {
 .play-link:hover {
   transform: translateY(-1px);
   filter: brightness(1.06);
+}
+
+.play-kazoeru {
+  background: linear-gradient(135deg, #ffe298, #d88f38);
+  color: #1c1206;
+  box-shadow: 0 8px 22px rgba(235, 168, 72, 0.44);
 }
 
 .play-tsumazuki {

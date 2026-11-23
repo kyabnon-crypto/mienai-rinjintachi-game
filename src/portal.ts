@@ -1,6 +1,26 @@
 import './portal.css';
 
 function renderSaveProgress(): void {
+  const kzEl = document.getElementById('prog-kazoeru');
+  if (kzEl) {
+    try {
+      const raw = localStorage.getItem('mienai_kazoeru_v1');
+      if (raw) {
+        const st = JSON.parse(raw);
+        const totalLv = Object.values(st.upgrades || {}).reduce(
+          (a: number, b: unknown) => a + (typeof b === 'number' ? b : 0),
+          0
+        );
+        const rank = 1 + Math.floor(totalLv / 2);
+        const stars = Number(st.stars || 0);
+        const tallies = Number(st.totalTallies || 0);
+        kzEl.textContent = `数えもの部屋 Lv.${rank} ・ えらかったねの星 ${stars} ・ 正の字 ${tallies}個`;
+      }
+    } catch {
+      // Ignore parse errors
+    }
+  }
+
   const tmEl = document.getElementById('prog-tsumazuki');
   if (tmEl) {
     try {

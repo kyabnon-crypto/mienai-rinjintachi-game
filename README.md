@@ -6,7 +6,17 @@
 
 ## 収録タイトル
 
-### 07. 踊り場のひと秒 〜ツマヅキ〜（NEW!）
+### 08. ブランコの数えノート 〜カゾエル〜（NEW!）
+- **ジャンル**：3D 夜の公園＆数えもの部屋・正の字カウントアクション（[`kazoeru.html`](kazoeru.html)）
+- **舞台**：三日月と街灯が照らす夜の公園＆ベンチの下の「数えもの部屋」
+- **特徴**：
+  - リグ・アニメーション済み `kazoeru.glb`（`Walking` / `Running`）＋三日月と星空・遠くの街明かり・風もないのに揺れる2人乗り公園ブランコ・街灯の光柱・蔦のからまる煉瓦塀と丸い入口・木のベンチと真鍮オイルランタン＆立て看板・中央の「正」の字丸絨毯・プレイに応じてリアルタイムで「正」が増える3枚の壁黒板（わらった・かなしかった・がんばった）・5色そろばん・現在数を刻む真鍮の数取器・小石と豆とガラス玉の瓶棚＆天秤・ブランコ連動の鎖模型・天井のガラス玉の数珠・赤いランタンを3D空間で再現。
+  - 夜風に漂う5種の記憶灯り（ふっと笑った灯り・泣いた夜の雫・見えない努力・数えガラス玉・レア星の正の字）をタップ / ドラッグ / WASD で集め、4つの数えスポットで1画ずつ「正」の字を完成させて「きょうのかぞえオーダー」や「数えノートの巻物まとめ」を達成しよう。
+  - **数え鳴らし（SWING TALLY）**で公園のブランコを大きく揺らし、周囲の「忘却の夜風」を一斉浄化＆近くの記憶灯りを吸引＆全4スポットの「正」を＋2画一気に書き進める爽快アクション！
+  - ゲージMAXで **STARLIGHT TALLY（満天の数え時間）**発動！三日月と星明かりが公園に満ち、全夜風がレア「星の正の字」へ変化＆自動吸引＆全スポット自動筆記＆ひかりの印2倍の極上フィーバー！
+  - 公式3アレンジ（`Dreamy Ver.` / `通常版` / `Instrumental` 各62秒ゲームサイズ）、6種類の数えもの部屋設備強化（大きな数えノートと5色そろばん・公園の街灯とガラス玉の数珠・くるくる巻物の棚と黒板・ブランコの鎖模型とベンチ・青いニット帽と丸絨毯・小石と豆とガラス玉の瓶棚＆天秤が3D空間に反映）、物語『第八話：公園のブランコの数え役』全5章を収録。
+
+### 07. 踊り場のひと秒 〜ツマヅキ〜
 - **ジャンル**：3D 朝の階段の踊り場・時間スロー＆ひやり救出アクション（[`tsumazuki.html`](tsumazuki.html)）
 - **舞台**：朝の光が差し込むマンションの「階段の踊り場＆階段裏の見張り部屋」
 - **特徴**：
@@ -105,6 +115,7 @@ npm run build
 
 ```text
 ├── index.html                  # 見えない隣人たち ゲーム選択ポータル
+├── kazoeru.html                # 08. ブランコの数えノート 〜カゾエル〜
 ├── tsumazuki.html              # 07. 踊り場のひと秒 〜ツマヅキ〜
 ├── henjiro.html                # 06. ポストの中の返事書き 〜ヘンジロウ〜
 ├── nukumori.html               # 05. 自販機裏のぬくもり番 〜ヌクモリ〜
@@ -114,11 +125,12 @@ npm run build
 ├── kagemichi.html              # 02. 終電のランタン 〜カゲミチ〜
 ├── namidabin.html              # 12. 涙蔵のオルゴール 〜ナミダビン〜
 ├── public/assets/
-│   ├── models/                 # tsumazuki.glb / henjiro.glb / nukumori.glb / wasuredama.glb / tokitsugi.glb / susunomi.glb / kagemichi.glb / namidabin.glb
+│   ├── models/                 # kazoeru.glb / tsumazuki.glb / henjiro.glb / nukumori.glb / wasuredama.glb / tokitsugi.glb / susunomi.glb / kagemichi.glb / namidabin.glb
 │   ├── audio/                  # 各キャラクター公式3バージョン（MP3）
 │   └── images/                 # ポータル用キャラクターサムネイル
 └── src/
     ├── portal.ts / portal.css  # 常世町ポータル
+    ├── kazoeru/                # カゾエル 3D夜の公園＆数えもの部屋（scene/actor/system/audio/state/ui）
     ├── tsumazuki/              # ツマヅキ 3D朝の階段の踊り場＆見張り部屋（scene/actor/system/audio/state/ui）
     ├── henjiro/                # ヘンジロウ 3D赤いポストの書斎（scene/actor/system/audio/state/ui）
     ├── nukumori/               # ヌクモリ 3D真冬の自販機裏＆ベンチ広場（scene/actor/system/audio/state/ui）
