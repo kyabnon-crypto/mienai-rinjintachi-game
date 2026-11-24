@@ -1053,12 +1053,21 @@ export class WorkshopScene {
     };
   }
 
+  private viewportAspect = 16 / 9;
+
   public resize(width: number, height: number): void {
     const w = Math.max(1, width);
     const h = Math.max(1, height);
-    this.camera.aspect = w / h;
-    // Slightly widen FOV on very compact landscape screens so the entire pocket watch + Tokitsugi remain comfortably visible
-    this.camera.fov = w / h < 1.55 ? 47 : 42;
+    this.viewportAspect = w / h;
+    this.camera.aspect = this.viewportAspect;
+    // Adapt vertical FOV for both ultra-wide phone landscape (e.g. iPhone 2.16:1) and narrower 4:3/tablet screens
+    if (this.viewportAspect >= 1.95) {
+      this.camera.fov = 48;
+    } else if (this.viewportAspect < 1.55) {
+      this.camera.fov = 47;
+    } else {
+      this.camera.fov = 44;
+    }
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(w, h, false);
   }
@@ -1077,17 +1086,23 @@ export class WorkshopScene {
 
     const beatPulse = Math.pow(1 - beatPhase, 3);
 
-    // Smooth camera framing between cozy Lobby orbit and crisp Play view
+    // Smooth camera framing between cozy Lobby orbit and crisp Play view.
+    // On wide phone landscape screens, pull back slightly and aim slightly forward so 5-6-7 o'clock slots stay well above the bottom HUD.
+    const isWidePhone = this.viewportAspect >= 1.9;
     const desiredPos =
       this.cameraMode === 'lobby'
-        ? new THREE.Vector3(Math.sin(elapsed * 0.25) * 1.35, 4.15 + Math.sin(elapsed * 0.4) * 0.14, 7.35)
-        : new THREE.Vector3(0, 5.75, 7.15);
+        ? new THREE.Vector3(Math.sin(elapsed * 0.25) * 1.15, 4.4 + Math.sin(elapsed * 0.4) * 0.14, 7.7)
+        : isWidePhone
+          ? new THREE.Vector3(0, 6.95, 9.05)
+          : new THREE.Vector3(0, 6.35, 8.15);
     const desiredLook =
       this.cameraMode === 'lobby'
-        ? new THREE.Vector3(0, 1.0, -0.65)
-        : new THREE.Vector3(0, 0.65, -0.05);
+        ? new THREE.Vector3(0, 0.95, -0.5)
+        : isWidePhone
+          ? new THREE.Vector3(0, 0.52, -0.02)
+          : new THREE.Vector3(0, 0.55, -0.04);
 
-    const lerpRate = 1 - Math.exp(-4.5 * dt);
+    const lerpRate = 1 - Math.exp(-6.5 * dt);
     this.camPos.lerp(desiredPos, lerpRate);
     this.camLook.lerp(desiredLook, lerpRate);
 
