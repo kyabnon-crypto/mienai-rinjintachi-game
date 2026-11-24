@@ -461,13 +461,34 @@ export class NukumoriUIController {
     setTimeout(() => el.remove(), 1150);
   }
 
+  private toastHideTimer: number | null = null;
+  private toastRemoveTimer: number | null = null;
+
   public showToast(title: string, body: string, tone: 'gold' | 'blue' = 'gold'): void {
+    if (this.toastHideTimer !== null) {
+      window.clearTimeout(this.toastHideTimer);
+      this.toastHideTimer = null;
+    }
+    if (this.toastRemoveTimer !== null) {
+      window.clearTimeout(this.toastRemoveTimer);
+      this.toastRemoveTimer = null;
+    }
+
+    // Keep only the single latest notification in the top-right corner so playfield stays unobstructed
+    this.toastContainer.innerHTML = '';
     const toast = document.createElement('div');
     toast.className = `toast toast-${tone}`;
     toast.innerHTML = `<strong>${title}</strong><p>${body}</p>`;
     this.toastContainer.appendChild(toast);
-    setTimeout(() => toast.classList.add('out'), 3400);
-    setTimeout(() => toast.remove(), 3900);
+
+    this.toastHideTimer = window.setTimeout(() => {
+      toast.classList.add('out');
+      this.toastHideTimer = null;
+    }, 2200);
+    this.toastRemoveTimer = window.setTimeout(() => {
+      toast.remove();
+      this.toastRemoveTimer = null;
+    }, 2550);
   }
 
   private renderCraftList(): void {
